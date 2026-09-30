@@ -85,6 +85,13 @@ export async function requireRole(
   const user = await requireAuth(req);
   const allowedRoles = Array.isArray(roles) ? roles : [roles];
 
+  if (user.mustChangePassword) {
+    throw new AuthError(
+      "Forbidden: First-time password change required. Please set your password before accessing hotel operations.",
+      403
+    );
+  }
+
   if (!allowedRoles.includes(user.role)) {
     throw new AuthError(
       `Forbidden: Access denied. Required role: [${allowedRoles.join(", ")}], your role: [${user.role}]`,
@@ -97,16 +104,61 @@ export async function requireRole(
 
 /**
  * Requires user to be assigned to a hotel tenant (MANAGER, RECEPTIONIST, STAFF).
- * Throws 403 AuthError if user has no hotelId.
+ * Throws 403 AuthError if user has no hotelId or has not fulfilled first-time password setup.
  */
 export async function requireHotelUser(
   req?: NextRequest | Request
 ): Promise<UserTokenPayload & { hotelId: string }> {
   const user = await requireAuth(req);
 
+  if (user.mustChangePassword) {
+    throw new AuthError(
+      "Forbidden: First-time password change required. Please set your password before accessing hotel operations.",
+      403
+    );
+  }
+
   if (!user.hotelId) {
     throw new AuthError(
       "Forbidden: User account is not assigned to any hotel tenant",
+      403
+    );
+  }
+
+  return user as UserTokenPayload & { hotelId: string };
+}
+
+/**
+ * Requires user to have Front Desk authority (MANAGER or RECEPTIONIST).
+ * STAFF and unauthenticated users are strictly blocked.
+ */
+export async function requireFrontDeskUser(
+  req?: NextRequest | Request
+): Promise<UserTokenPayload & { hotelId: string }> {
+  const user = await requireRole([USER_ROLES.MANAGER, USER_ROLES.RECEPTIONIST], req);
+
+  if (!user.hotelId) {
+    throw new AuthError(
+      "Forbidden: User account is not assigned to any hotel tenant",
+      403
+    );
+  }
+
+  return user as UserTokenPayload & { hotelId: string };
+}
+
+/**
+ * Requires user to have Staff authority (STAFF role only).
+ * SYSTEM_ADMIN, MANAGER, RECEPTIONIST, GUEST and unauthenticated users are strictly blocked.
+ */
+export async function requireStaffUser(
+  req?: NextRequest | Request
+): Promise<UserTokenPayload & { hotelId: string }> {
+  const user = await requireRole(USER_ROLES.STAFF, req);
+
+  if (!user.hotelId) {
+    throw new AuthError(
+      "Forbidden: Staff account is not assigned to any hotel tenant",
       403
     );
   }
@@ -165,6 +217,15 @@ export function getTenantScope(
   }
 
   return {};
+}
+
+/**
+ * Re-export/helper: authenticateManager
+ * Enforces valid manager authentication and returns hotel context.
+ */
+export async function authenticateManager(req?: NextRequest | Request) {
+  const { requireManager } = await import("@/lib/authorization/manager");
+  return requireManager(req);
 }
 
 /**

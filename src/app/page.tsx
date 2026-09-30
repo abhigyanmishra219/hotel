@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ShieldCheck,
   User,
@@ -18,7 +19,13 @@ import { useUser } from "@/context/UserContext";
 import { USER_ROLES, getRoleDashboardPath } from "@/types/roles";
 
 export default function Home() {
+  const router = useRouter();
   const { user, logout, isLoading } = useUser();
+
+  const handleLogout = () => {
+    logout();
+    router.replace("/login");
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-amber-500 selection:text-slate-950">
@@ -63,7 +70,7 @@ export default function Home() {
                 </Link>
 
                 <button
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium border border-slate-700 transition"
                 >
                   <LogOut className="w-3.5 h-3.5" />
@@ -147,7 +154,7 @@ export default function Home() {
                 <span>Open {user.role} Dashboard</span>
               </Link>
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 rounded-xl text-xs font-medium transition"
               >
                 Sign Out

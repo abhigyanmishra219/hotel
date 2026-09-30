@@ -72,6 +72,7 @@ export async function POST(
         password: hashedPassword,
         role: USER_ROLES.MANAGER, // Never allow arbitrary roles
         hotelId: hotel._id,
+        mustChangePassword: true,
         isActive: true,
       });
 
@@ -99,6 +100,7 @@ export async function POST(
             email: newManager.email,
             role: newManager.role,
             hotelId: hotel._id.toString(),
+            mustChangePassword: true,
             isActive: newManager.isActive,
           },
           temporaryPassword: tempPassword,
@@ -134,6 +136,7 @@ export async function POST(
       const newTempPassword = `Mgr@${crypto.randomBytes(4).toString("hex")}`;
       const salt = await bcrypt.genSalt(10);
       manager.password = await bcrypt.hash(newTempPassword, salt);
+      manager.mustChangePassword = true;
       await manager.save();
 
       await logAudit({

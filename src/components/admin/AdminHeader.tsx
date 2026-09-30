@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Menu,
   ShieldCheck,
@@ -20,7 +21,13 @@ interface AdminHeaderProps {
 }
 
 export default function AdminHeader({ onMenuClick, isCollapsed }: AdminHeaderProps) {
+  const router = useRouter();
   const { user, logout } = useUser();
+
+  const handleLogout = () => {
+    logout();
+    router.replace("/login");
+  };
 
   return (
     <header
@@ -74,7 +81,7 @@ export default function AdminHeader({ onMenuClick, isCollapsed }: AdminHeaderPro
 
         {/* Logout */}
         <button
-          onClick={logout}
+          onClick={handleLogout}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-rose-200 text-xs font-semibold border border-rose-500/30 transition shadow-sm"
           title="Sign out of admin session"
         >

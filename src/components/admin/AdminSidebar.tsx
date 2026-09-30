@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Hotel as HotelIcon,
   LayoutDashboard,
@@ -135,8 +135,14 @@ export default function AdminSidebar({
   isCollapsed,
   setIsCollapsed,
 }: AdminSidebarProps) {
+  const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useUser();
+
+  const handleLogout = () => {
+    logout();
+    router.replace("/login");
+  };
 
   const isRouteActive = (item: NavItem) => {
     if (item.exact) {
@@ -296,7 +302,7 @@ export default function AdminSidebar({
             </Link>
 
             <button
-              onClick={logout}
+              onClick={handleLogout}
               className={`flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 text-xs font-medium transition ${
                 isCollapsed ? "justify-center" : ""
               }`}

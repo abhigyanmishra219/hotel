@@ -87,10 +87,11 @@ export default function RegisterPage() {
       // Save token and user into UserContext
       login(data.token, data.user);
       setSuccess(true);
+      setFormData({ name: "", email: "", password: "", confirmPassword: "" });
 
       setTimeout(() => {
-        router.push("/admin/dashboard");
-      }, 1200);
+        router.replace("/admin/dashboard");
+      }, 400);
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred.");
     } finally {
@@ -168,6 +169,7 @@ export default function RegisterPage() {
                   name="name"
                   type="text"
                   required
+                  autoComplete="name"
                   placeholder="e.g. Abhigyan Mishra"
                   value={formData.name}
                   onChange={handleChange}
@@ -193,6 +195,7 @@ export default function RegisterPage() {
                   name="email"
                   type="email"
                   required
+                  autoComplete="username"
                   placeholder="admin@hotel.com"
                   value={formData.email}
                   onChange={handleChange}
@@ -218,6 +221,7 @@ export default function RegisterPage() {
                   name="password"
                   type={showPassword ? "text" : "password"}
                   required
+                  autoComplete="new-password"
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={handleChange}
@@ -255,6 +259,7 @@ export default function RegisterPage() {
                   name="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   required
+                  autoComplete="new-password"
                   placeholder="••••••••"
                   value={formData.confirmPassword}
                   onChange={handleChange}

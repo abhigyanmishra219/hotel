@@ -191,6 +191,7 @@ export async function POST(req: NextRequest) {
         password: hashedPassword,
         role: USER_ROLES.MANAGER,
         hotelId: newHotel._id,
+        mustChangePassword: true,
         isActive: true,
       });
 
@@ -200,6 +201,7 @@ export async function POST(req: NextRequest) {
         email: managerDoc.email,
         role: managerDoc.role,
         hotelId: newHotel._id.toString(),
+        mustChangePassword: true,
         isActive: managerDoc.isActive,
       };
 

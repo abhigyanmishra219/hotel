@@ -137,9 +137,9 @@ export default function HotelDetailPage() {
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
-        router.push("/login");
+        router.replace("/login");
       } else if (user.role !== USER_ROLES.SYSTEM_ADMIN) {
-        router.push("/");
+        router.replace("/");
       }
     }
   }, [user, isLoading, router]);

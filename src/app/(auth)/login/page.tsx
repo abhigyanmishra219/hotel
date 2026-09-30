@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -19,7 +19,8 @@ import { getRoleDashboardPath } from "@/types/roles";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useUser();
+  const { user, login, isLoading } = useUser();
+  const formRef = React.useRef<HTMLFormElement>(null);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -30,6 +31,55 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // If already logged in, redirect directly to dashboard or change-password using router.replace
+  useEffect(() => {
+    if (!isLoading && user && !success) {
+      const dest = user.mustChangePassword
+        ? "/change-password"
+        : getRoleDashboardPath(user.role);
+      router.replace(dest);
+    }
+  }, [user, isLoading, router, success]);
+
+  // Handle browser back/forward and bfcache page restoration safely
+  useEffect(() => {
+    const resetForm = () => {
+      setFormData({ email: "", password: "" });
+      setError(null);
+      setSuccess(false);
+      if (formRef.current) {
+        formRef.current.reset();
+      }
+    };
+
+    resetForm();
+
+    const handlePageShow = (event: PageTransitionEvent) => {
+      resetForm();
+      const storedToken = localStorage.getItem("hotel_auth_token");
+      const storedUser = localStorage.getItem("hotel_auth_user");
+      if (storedToken && storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          if (parsed?.role) {
+            const dest = parsed.mustChangePassword
+              ? "/change-password"
+              : getRoleDashboardPath(parsed.role);
+            router.replace(dest);
+          }
+        } catch {
+          // Ignored
+        }
+      }
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+    return () => {
+      window.removeEventListener("pageshow", handlePageShow);
+      resetForm();
+    };
+  }, [router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -67,11 +117,16 @@ export default function LoginPage() {
 
       login(data.token, data.user);
       setSuccess(true);
+      // Immediately clear sensitive password state from memory
+      setFormData({ email: "", password: "" });
+
+      const dest = data.user?.mustChangePassword
+        ? "/change-password"
+        : getRoleDashboardPath(data.user?.role);
 
       setTimeout(() => {
-        const dest = getRoleDashboardPath(data.user?.role);
-        router.push(dest);
-      }, 900);
+        router.replace(dest);
+      }, 350);
     } catch (err: any) {
       setError(err.message || "Invalid credentials.");
     } finally {
@@ -115,7 +170,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label
                 htmlFor="email"
@@ -132,6 +187,7 @@ export default function LoginPage() {
                   name="email"
                   type="email"
                   required
+                  autoComplete="username"
                   placeholder="admin@hotel.com"
                   value={formData.email}
                   onChange={handleChange}
@@ -156,6 +212,7 @@ export default function LoginPage() {
                   name="password"
                   type={showPassword ? "text" : "password"}
                   required
+                  autoComplete="current-password"
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={handleChange}

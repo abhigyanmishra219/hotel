@@ -4,9 +4,12 @@ import { UserRole, USER_ROLES, VALID_ROLES } from "@/types/roles";
 export interface IUser extends Document {
   name: string;
   email: string;
+  phone?: string;
   password?: string;
   role: UserRole;
   hotelId?: Types.ObjectId | string | null;
+  shift?: string;
+  mustChangePassword: boolean;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -30,6 +33,11 @@ const UserSchema = new Schema<IUser>(
         /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
         "Please provide a valid email address",
       ],
+    },
+    phone: {
+      type: String,
+      trim: true,
+      default: "",
     },
     password: {
       type: String,
@@ -62,6 +70,15 @@ const UserSchema = new Schema<IUser>(
         message: "hotelId is required for MANAGER, RECEPTIONIST, and STAFF roles",
       },
     },
+    mustChangePassword: {
+      type: Boolean,
+      default: false,
+    },
+    shift: {
+      type: String,
+      default: "09:00 AM - 06:00 PM (General Shift)",
+      trim: true,
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -71,6 +88,9 @@ const UserSchema = new Schema<IUser>(
     timestamps: true,
   }
 );
+
+// Compound index for fast multi-tenant staff/receptionist lookups
+UserSchema.index({ hotelId: 1, role: 1, isActive: 1 });
 
 // Prevent mongoose model overwrite error in Next.js hot reload
 const User: Model<IUser> =

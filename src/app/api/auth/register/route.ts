@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
       hotelId: null,
     });
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         success: true,
         message: "Account created successfully with SYSTEM_ADMIN role",
@@ -98,6 +98,16 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
+
+    response.cookies.set("hotel_auth_token", token, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+
+    return response;
   } catch (error: any) {
     console.error("Account creation error:", error);
     return NextResponse.json(

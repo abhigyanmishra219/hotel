@@ -16,6 +16,7 @@ export interface User {
   email: string;
   role: UserRole;
   hotelId?: string | null;
+  mustChangePassword?: boolean;
 }
 
 interface UserContextType {
@@ -38,8 +39,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [token, setTokenState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Load user and token from localStorage on initial mount
-  useEffect(() => {
+  const syncAuthState = useCallback(() => {
     try {
       const storedToken = localStorage.getItem(TOKEN_KEY);
       const storedUser = localStorage.getItem(USER_KEY);
@@ -51,15 +51,48 @@ export function UserProvider({ children }: { children: ReactNode }) {
           setUserState({
             ...parsedUser,
             hotelId: parsedUser.hotelId ?? null,
+            mustChangePassword: Boolean(parsedUser.mustChangePassword),
           });
+          return;
         }
       }
+      setTokenState(null);
+      setUserState(null);
     } catch (error) {
       console.error("Failed to restore auth session from storage:", error);
+      setTokenState(null);
+      setUserState(null);
     } finally {
       setIsLoading(false);
     }
   }, []);
+
+  // Load user and token from localStorage on initial mount and listen to bfcache pageshow/storage events
+  useEffect(() => {
+    syncAuthState();
+
+    const handlePageShow = () => {
+      syncAuthState();
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (
+        event.key === TOKEN_KEY ||
+        event.key === USER_KEY ||
+        event.key === null
+      ) {
+        syncAuthState();
+      }
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener("pageshow", handlePageShow);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, [syncAuthState]);
 
   const setUser = useCallback((newUser: User | null) => {
     setUserState(newUser);
@@ -73,11 +106,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const login = useCallback((newToken: string, userData?: User) => {
     setTokenState(newToken);
     localStorage.setItem(TOKEN_KEY, newToken);
+    if (typeof document !== "undefined") {
+      document.cookie = `${TOKEN_KEY}=${newToken}; path=/; max-age=604800; SameSite=Lax`;
+    }
 
     if (userData) {
       const sanitizedUser: User = {
         ...userData,
         hotelId: userData.hotelId ?? null,
+        mustChangePassword: Boolean(userData.mustChangePassword),
       };
       setUserState(sanitizedUser);
       localStorage.setItem(USER_KEY, JSON.stringify(sanitizedUser));
@@ -97,6 +134,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             email: decoded.email || "",
             role,
             hotelId: decoded.hotelId ?? null,
+            mustChangePassword: Boolean(decoded.mustChangePassword),
           };
           setUserState(decodedUser);
           localStorage.setItem(USER_KEY, JSON.stringify(decodedUser));
@@ -110,8 +148,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     setTokenState(null);
     setUserState(null);
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
+    try {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      sessionStorage.clear();
+    } catch (err) {
+      console.error("Error clearing storage during logout:", err);
+    }
+    if (typeof document !== "undefined") {
+      document.cookie = `${TOKEN_KEY}=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0; SameSite=Lax`;
+      document.cookie = `${USER_KEY}=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0; SameSite=Lax`;
+    }
   }, []);
 
   const hasRole = useCallback(

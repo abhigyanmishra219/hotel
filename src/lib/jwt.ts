@@ -1,8 +1,9 @@
 import jwt, { SignOptions, JwtPayload } from "jsonwebtoken";
 import { UserRole } from "@/types/roles";
+import { env } from "@/lib/env";
 
-const JWT_SECRET = process.env.JWT_SECRET || "fallback_jwt_secret_key";
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
+const JWT_SECRET = env.JWT_SECRET;
+const JWT_EXPIRES_IN = env.JWT_EXPIRES_IN;
 
 export interface UserTokenPayload extends JwtPayload {
   userId?: string;
@@ -10,6 +11,7 @@ export interface UserTokenPayload extends JwtPayload {
   email: string;
   role: UserRole;
   hotelId?: string | null;
+  mustChangePassword?: boolean;
 }
 
 /**
@@ -28,6 +30,7 @@ export function createToken(
     email: payload.email,
     role: payload.role,
     hotelId: payload.hotelId ?? null,
+    mustChangePassword: Boolean(payload.mustChangePassword),
   };
 
   const signOptions: SignOptions = {

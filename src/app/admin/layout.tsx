@@ -23,14 +23,16 @@ export default function AdminLayout({
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
-        router.push("/login");
+        router.replace("/login");
+      } else if (user.mustChangePassword) {
+        router.replace("/change-password");
       } else if (user.role !== USER_ROLES.SYSTEM_ADMIN) {
-        router.push("/");
+        router.replace("/");
       }
     }
   }, [user, isLoading, router]);
 
-  if (isLoading || !user || user.role !== USER_ROLES.SYSTEM_ADMIN) {
+  if (isLoading || !user || user.mustChangePassword || user.role !== USER_ROLES.SYSTEM_ADMIN) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-300">
         <Loader2 className="w-8 h-8 animate-spin text-amber-400 mb-3" />

@@ -13,10 +13,12 @@ export default function GenericDashboardRedirect() {
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
-        router.push("/login");
+        router.replace("/login");
+      } else if (user.mustChangePassword) {
+        router.replace("/change-password");
       } else {
         const dest = getRoleDashboardPath(user.role);
-        router.push(dest);
+        router.replace(dest);
       }
     }
   }, [user, isLoading, router]);
