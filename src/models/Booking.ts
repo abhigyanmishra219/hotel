@@ -26,10 +26,14 @@ export interface IBooking extends Document {
   bookingSource: BookingSource;
   notes?: string;
   createdBy: Types.ObjectId;
+  checkInAt?: Date;
+  checkOutAt?: Date;
   checkedInAt?: Date;
+  actualCheckInAt?: Date;
   checkedInBy?: Types.ObjectId;
   actualCheckInDate?: Date;
   actualCheckOutDate?: Date;
+  actualCheckOutAt?: Date;
   checkedOutBy?: Types.ObjectId;
   checkInNotes?: string;
   checkOutNotes?: string;
@@ -139,7 +143,16 @@ const BookingSchema = new Schema<IBooking>(
       ref: "User",
       required: true,
     },
+    checkInAt: {
+      type: Date,
+    },
+    checkOutAt: {
+      type: Date,
+    },
     checkedInAt: {
+      type: Date,
+    },
+    actualCheckInAt: {
       type: Date,
     },
     checkedInBy: {
@@ -150,6 +163,9 @@ const BookingSchema = new Schema<IBooking>(
       type: Date,
     },
     actualCheckOutDate: {
+      type: Date,
+    },
+    actualCheckOutAt: {
       type: Date,
     },
     checkedOutBy: {

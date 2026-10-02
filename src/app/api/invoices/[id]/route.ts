@@ -22,7 +22,7 @@ export async function GET(
     })
       .populate("customerId", "customerId fullName phone email address city state country idType idNumber notes")
       .populate("roomId", "roomNumber floor roomType pricePerNight capacity amenities")
-      .populate("bookingId", "bookingId checkInDate checkOutDate numberOfNights adults children bookingSource status notes checkedInAt actualCheckInDate actualCheckOutDate")
+      .populate("bookingId", "bookingId checkInDate checkOutDate checkInAt checkOutAt numberOfNights adults children bookingSource status notes checkedInAt actualCheckInAt actualCheckInDate actualCheckOutDate actualCheckOutAt")
       .populate("generatedBy", "name email role")
       .populate("paymentHistory.recordedBy", "name email");
 

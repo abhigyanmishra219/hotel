@@ -25,11 +25,13 @@ interface AdditionalChargeInput {
 }
 
 interface CheckOutModalProps {
-  booking: IBookingData | null;
+  booking: any | null;
   isOpen: boolean;
   portalType: "manager" | "receptionist";
   onClose: () => void;
   onSuccess: () => void;
+  existingPaid?: number;
+  existingAdditionalCharges?: AdditionalChargeInput[];
 }
 
 export default function CheckOutModal({
@@ -38,6 +40,8 @@ export default function CheckOutModal({
   portalType,
   onClose,
   onSuccess,
+  existingPaid = 0,
+  existingAdditionalCharges = [],
 }: CheckOutModalProps) {
   const router = useRouter();
   const { token } = useUser();
@@ -45,14 +49,38 @@ export default function CheckOutModal({
   const [additionalCharges, setAdditionalCharges] = useState<AdditionalChargeInput[]>([]);
   const [newChargeDesc, setNewChargeDesc] = useState("");
   const [newChargeAmount, setNewChargeAmount] = useState("");
-  const [discount, setDiscount] = useState<number>(booking?.discount || 0);
+  const [discount, setDiscount] = useState<number>(0);
   const [amountPaid, setAmountPaid] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState("CASH");
   const [transactionRef, setTransactionRef] = useState("");
   const [notes, setNotes] = useState("");
 
+  // Actual Checkout Date & Time state
+  const getCurrentDateString = () => new Date().toISOString().split("T")[0];
+  const getCurrentTimeString = () =>
+    new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+
+  const [checkoutDate, setCheckoutDate] = useState<string>(getCurrentDateString());
+  const [checkoutTime, setCheckoutTime] = useState<string>(getCurrentTimeString());
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const priorPaid = existingPaid || booking?.totalPaid || 0;
+
+  React.useEffect(() => {
+    if (booking && isOpen) {
+      setDiscount(booking.discount || 0);
+      setAdditionalCharges(existingAdditionalCharges || []);
+      setAmountPaid(0);
+      setNewChargeDesc("");
+      setNewChargeAmount("");
+      setNotes("");
+      setCheckoutDate(getCurrentDateString());
+      setCheckoutTime(getCurrentTimeString());
+      setError(null);
+    }
+  }, [booking, isOpen, existingAdditionalCharges]);
 
   if (!isOpen || !booking) return null;
 
@@ -73,7 +101,8 @@ export default function CheckOutModal({
   const tax = Math.round(taxableAmount * 0.12);
   const totalAmount = taxableAmount + tax;
 
-  const amountDue = Math.max(0, totalAmount - (amountPaid || 0));
+  const netBalanceDue = Math.max(0, totalAmount - priorPaid);
+  const remainingAfterPayment = Math.max(0, netBalanceDue - (amountPaid || 0));
 
   const handleAddCharge = () => {
     if (!newChargeDesc.trim()) return;
@@ -105,6 +134,8 @@ export default function CheckOutModal({
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
+          checkOutDate: checkoutDate,
+          checkOutTime: checkoutTime,
           additionalCharges,
           discount: Number(discount) || 0,
           amountPaid: Number(amountPaid) || 0,
@@ -182,16 +213,54 @@ export default function CheckOutModal({
               </span>
             </div>
             <div>
-              <span className="text-slate-500 block text-[10px] uppercase font-bold">Stay Dates</span>
+              <span className="text-slate-500 block text-[10px] uppercase font-bold">Scheduled Check-in</span>
               <span className="font-medium text-slate-300 block">
-                {new Date(booking.checkInDate).toLocaleDateString()} → Today
+                {new Date(booking.checkInDate).toLocaleDateString()}{" "}
+                {booking.checkInAt ? new Date(booking.checkInAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
               </span>
             </div>
             <div>
-              <span className="text-slate-500 block text-[10px] uppercase font-bold">Rate</span>
-              <span className="font-mono text-white block">
-                ₹{pricePerNight}/night ({scheduledNights}N)
+              <span className="text-slate-500 block text-[10px] uppercase font-bold">Scheduled Checkout</span>
+              <span className="font-medium text-slate-300 block">
+                {new Date(booking.checkOutDate).toLocaleDateString()}{" "}
+                {booking.checkOutAt ? new Date(booking.checkOutAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "11:00 AM"}
               </span>
+            </div>
+          </div>
+
+          {/* Actual Checkout Date & Time Selector */}
+          <div className="p-4 bg-slate-950/40 border border-slate-800 rounded-xl space-y-3">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-amber-400" />
+              <span className="text-xs font-bold text-white uppercase tracking-wider">
+                Actual Checkout Schedule
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                  Actual Checkout Date *
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={checkoutDate}
+                  onChange={(e) => setCheckoutDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-400/40"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                  Actual Checkout Time *
+                </label>
+                <input
+                  type="time"
+                  required
+                  value={checkoutTime}
+                  onChange={(e) => setCheckoutTime(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-400/40"
+                />
+              </div>
             </div>
           </div>
 
@@ -285,17 +354,31 @@ export default function CheckOutModal({
               <span className="font-mono text-white">₹{tax.toLocaleString()}</span>
             </div>
 
+            {priorPaid > 0 && (
+              <div className="flex items-center justify-between text-emerald-400">
+                <span>Previously Paid / Deposits:</span>
+                <span className="font-mono">₹{priorPaid.toLocaleString()}</span>
+              </div>
+            )}
+
             <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
-              <span className="font-bold text-white text-sm">Total Invoiced Amount:</span>
+              <span className="font-bold text-white text-sm">Total Stay Charges:</span>
               <span className="font-black text-white text-lg">
                 ₹{totalAmount.toLocaleString()}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between text-amber-400 font-semibold pt-1">
+              <span>Unsettled Balance Due:</span>
+              <span className="font-mono text-base font-bold">
+                ₹{netBalanceDue.toLocaleString()}
               </span>
             </div>
           </div>
 
           {/* Section 3: Payment Capture */}
           <div className="p-4 bg-slate-900/60 border border-slate-800 rounded-xl space-y-3">
-            <span className="text-xs font-bold text-white block">Payment Recording</span>
+            <span className="text-xs font-bold text-white block">Checkout Payment Settlement</span>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
@@ -306,22 +389,24 @@ export default function CheckOutModal({
                   <input
                     type="number"
                     min={0}
-                    max={totalAmount}
+                    max={netBalanceDue}
                     value={amountPaid}
                     onChange={(e) =>
                       setAmountPaid(
-                        Math.max(0, Math.min(totalAmount, parseFloat(e.target.value) || 0))
+                        Math.max(0, Math.min(netBalanceDue, parseFloat(e.target.value) || 0))
                       )
                     }
                     className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-white text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-amber-400/40"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setAmountPaid(totalAmount)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold hover:bg-emerald-500/30"
-                  >
-                    Full Pay
-                  </button>
+                  {netBalanceDue > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setAmountPaid(netBalanceDue)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold hover:bg-emerald-500/30"
+                    >
+                      Pay Full Due
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -357,20 +442,30 @@ export default function CheckOutModal({
             </div>
 
             <div className="flex items-center justify-between text-xs px-3 py-2 rounded-lg bg-slate-950/60 border border-slate-800">
-              <span className="text-slate-400">Remaining Balance Due:</span>
+              <span className="text-slate-400">Remaining Balance Post Checkout:</span>
               <span
                 className={`font-mono font-bold ${
-                  amountDue > 0 ? "text-amber-400" : "text-emerald-400"
+                  remainingAfterPayment > 0 ? "text-amber-400" : "text-emerald-400"
                 }`}
               >
-                ₹{amountDue.toLocaleString()} {amountDue === 0 ? "(Fully Paid)" : ""}
+                ₹{remainingAfterPayment.toLocaleString()} {remainingAfterPayment === 0 ? "(Fully Settled)" : ""}
               </span>
             </div>
+
+            {remainingAfterPayment > 0 && (
+              <div className="p-3 bg-amber-500/15 border border-amber-500/30 rounded-xl text-xs text-amber-300 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold block">Outstanding Balance: ₹{remainingAfterPayment.toLocaleString()}</span>
+                  <span>Please collect payment or proceed according to your property's checkout credit policy.</span>
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-300">
-            Completing check-out automatically transitions the room status to{" "}
-            <strong>CLEANING</strong> and generates an invoice record.
+          <div className="p-3 bg-slate-800/60 border border-slate-700/60 rounded-xl text-xs text-slate-300">
+            Completing check-out automatically transitions Room <strong>{(room as any)?.roomNumber}</strong> status to{" "}
+            <strong>CLEANING</strong> and generates the final tax invoice.
           </div>
 
           {/* Action Buttons */}

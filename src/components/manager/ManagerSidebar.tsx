@@ -174,7 +174,7 @@ export default function ManagerSidebar({
 
       {/* Main Sidebar */}
       <aside
-        className={`fixed top-0 left-0 bottom-0 z-50 flex flex-col bg-slate-900 border-r border-slate-800 transition-all duration-300 ease-in-out
+        className={`fixed top-0 left-0 bottom-0 z-50 flex flex-col bg-slate-900 border-r border-slate-800 transition-all duration-300 ease-in-out print:hidden
           ${isCollapsed ? "w-20" : "w-64"}
           ${
             isMobileOpen

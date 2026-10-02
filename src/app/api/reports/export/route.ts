@@ -89,8 +89,20 @@ export async function GET(req: NextRequest) {
             roomType: b.roomId?.roomType || "—",
             checkInDate: new Date(b.checkInDate).toLocaleDateString(),
             checkOutDate: new Date(b.checkOutDate).toLocaleDateString(),
-            actualCheckIn: b.actualCheckIn ? new Date(b.actualCheckIn).toLocaleString() : "—",
-            actualCheckOut: b.actualCheckOut ? new Date(b.actualCheckOut).toLocaleString() : "—",
+            actualCheckIn: b.actualCheckInAt
+              ? new Date(b.actualCheckInAt).toLocaleString()
+              : b.actualCheckInDate
+              ? new Date(b.actualCheckInDate).toLocaleString()
+              : b.actualCheckIn
+              ? new Date(b.actualCheckIn).toLocaleString()
+              : "—",
+            actualCheckOut: b.actualCheckOutAt
+              ? new Date(b.actualCheckOutAt).toLocaleString()
+              : b.actualCheckOutDate
+              ? new Date(b.actualCheckOutDate).toLocaleString()
+              : b.actualCheckOut
+              ? new Date(b.actualCheckOut).toLocaleString()
+              : "—",
             guests: b.numberOfGuests || 1,
             totalAmount: inv ? inv.totalAmount : b.totalPrice || 0,
             amountPaid: inv ? inv.amountPaid : 0,

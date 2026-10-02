@@ -29,7 +29,10 @@ export interface IBookingData {
     email: string;
     role: string;
   } | string;
+  checkInAt?: string | Date;
+  checkOutAt?: string | Date;
   checkedInAt?: string | Date;
+  actualCheckInAt?: string | Date;
   checkedInBy?: {
     _id: string;
     name: string;
@@ -38,6 +41,7 @@ export interface IBookingData {
   } | string;
   actualCheckInDate?: string | Date;
   actualCheckOutDate?: string | Date;
+  actualCheckOutAt?: string | Date;
   checkedOutBy?: {
     _id: string;
     name: string;

@@ -20,17 +20,12 @@ import {
 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { USER_ROLES } from "@/types/roles";
-import ManagerSidebar from "@/components/manager/ManagerSidebar";
-import ManagerHeader from "@/components/manager/ManagerHeader";
 import { IRoomServiceRequestData, ROOM_SERVICE_STATUSES } from "@/types/roomService";
 import { TASK_PRIORITIES } from "@/types/housekeeping";
 
 export default function ManagerRoomServicePage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useUser();
-
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const [requests, setRequests] = useState<IRoomServiceRequestData[]>([]);
   const [staffList, setStaffList] = useState<any[]>([]);
@@ -205,7 +200,7 @@ export default function ManagerRoomServicePage() {
 
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-300">
+      <div className="py-20 flex flex-col items-center justify-center text-slate-300">
         <Loader2 className="w-8 h-8 animate-spin text-amber-400 mb-3" />
         <p className="text-sm font-medium">Verifying Manager Authorization...</p>
       </div>
@@ -213,25 +208,7 @@ export default function ManagerRoomServicePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex selection:bg-amber-500 selection:text-slate-950">
-      <ManagerSidebar
-        isMobileOpen={isMobileOpen}
-        setIsMobileOpen={setIsMobileOpen}
-        isCollapsed={isCollapsed}
-        setIsCollapsed={setIsCollapsed}
-      />
-
-      <div
-        className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out ${
-          isCollapsed ? "lg:ml-20" : "lg:ml-64"
-        }`}
-      >
-        <ManagerHeader
-          onMenuClick={() => setIsMobileOpen(true)}
-          isCollapsed={isCollapsed}
-        />
-
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
           {/* Header Banner */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -482,8 +459,6 @@ export default function ManagerRoomServicePage() {
               </div>
             )}
           </div>
-        </main>
-      </div>
 
       {/* Modal: Create Request */}
       {isCreateOpen && (
@@ -764,6 +739,6 @@ export default function ManagerRoomServicePage() {
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }

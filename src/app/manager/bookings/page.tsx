@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Ban,
   DoorOpen,
+  Receipt,
 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { IBookingData } from "@/types/booking";
@@ -334,6 +335,13 @@ export default function ManagerBookingsPage() {
                           title="View Dossier"
                         >
                           <Eye className="w-3.5 h-3.5" />
+                        </Link>
+                        <Link
+                          href={`/manager/billing?bookingId=${b._id}`}
+                          className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 hover:text-amber-300 border border-slate-700 transition"
+                          title="View Billing & Folio"
+                        >
+                          <Receipt className="w-3.5 h-3.5" />
                         </Link>
                         {b.status === "CONFIRMED" && (
                           <>

@@ -72,7 +72,7 @@ export default function ManagerLayout({
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 ease-in-out
+        className={`flex-1 flex flex-col transition-all duration-300 ease-in-out print:pl-0 print:m-0 print:p-0
           ${isCollapsed ? "lg:pl-20" : "lg:pl-64"}
         `}
       >

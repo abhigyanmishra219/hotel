@@ -61,7 +61,18 @@ export async function GET(req: NextRequest) {
     const paymentMethodCounts: Record<string, number> = {};
 
     // Grouping by Date for time-series chart
-    const dailyMap = new Map<string, { date: string; revenue: number; collected: number; invoicesCount: number }>();
+    const dailyMap = new Map<
+      string,
+      {
+        date: string;
+        revenue: number;
+        grossRevenue: number;
+        collected: number;
+        collectedRevenue: number;
+        outstandingDue: number;
+        invoicesCount: number;
+      }
+    >();
 
     for (const inv of invoices) {
       const gross = inv.totalAmount || 0;
@@ -96,12 +107,18 @@ export async function GET(req: NextRequest) {
       const existing = dailyMap.get(dateKey) || {
         date: dateKey,
         revenue: 0,
+        grossRevenue: 0,
         collected: 0,
+        collectedRevenue: 0,
+        outstandingDue: 0,
         invoicesCount: 0,
       };
 
       existing.revenue += gross;
+      existing.grossRevenue += gross;
       existing.collected += paid;
+      existing.collectedRevenue += paid;
+      existing.outstandingDue += due;
       existing.invoicesCount += 1;
       dailyMap.set(dateKey, existing);
     }
@@ -135,13 +152,17 @@ export async function GET(req: NextRequest) {
       },
       summary: {
         totalGrossRevenue,
+        grossRevenue: totalGrossRevenue,
         totalCollected,
+        collectedRevenue: totalCollected,
         totalOutstanding,
+        outstandingDue: totalOutstanding,
         totalRoomRevenue,
         totalAdditionalCharges,
         totalTax,
         totalDiscount,
         totalInvoices: invoices.length,
+        invoicesCount: invoices.length,
         prevGrossRevenue,
         prevCollected,
         revenueDelta: totalGrossRevenue - prevGrossRevenue,
@@ -149,6 +170,7 @@ export async function GET(req: NextRequest) {
       paymentStatusCounts,
       paymentMethodCounts,
       timeSeries,
+      dailyRevenue: timeSeries,
     });
   } catch (err) {
     return handleAuthError(err);

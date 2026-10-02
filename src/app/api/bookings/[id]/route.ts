@@ -101,7 +101,9 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     const {
       roomId: newRoomId,
       checkInDate: rawCheckIn,
+      checkInTime,
       checkOutDate: rawCheckOut,
+      checkOutTime,
       adults,
       children,
       discount,
@@ -175,10 +177,26 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // 4. Update fields & recalculate pricing
     booking.roomId = room._id;
     booking.checkInDate = targetCheckIn;
     booking.checkOutDate = targetCheckOut;
+
+    if (rawCheckIn || checkInTime) {
+      const timeStr = checkInTime || (booking.checkInAt ? `${String(booking.checkInAt.getUTCHours()).padStart(2, "0")}:${String(booking.checkInAt.getUTCMinutes()).padStart(2, "0")}` : "14:00");
+      const [h, m] = timeStr.split(":").map(Number);
+      const newInAt = new Date(targetCheckIn);
+      newInAt.setUTCHours(isNaN(h) ? 14 : h, isNaN(m) ? 0 : m, 0, 0);
+      booking.checkInAt = newInAt;
+    }
+
+    if (rawCheckOut || checkOutTime) {
+      const timeStr = checkOutTime || (booking.checkOutAt ? `${String(booking.checkOutAt.getUTCHours()).padStart(2, "0")}:${String(booking.checkOutAt.getUTCMinutes()).padStart(2, "0")}` : "11:00");
+      const [h, m] = timeStr.split(":").map(Number);
+      const newOutAt = new Date(targetCheckOut);
+      newOutAt.setUTCHours(isNaN(h) ? 11 : h, isNaN(m) ? 0 : m, 0, 0);
+      booking.checkOutAt = newOutAt;
+    }
+
     booking.adults = numAdults;
     booking.children = numChildren;
     booking.numberOfGuests = totalGuests;

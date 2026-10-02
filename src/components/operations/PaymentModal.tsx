@@ -23,14 +23,38 @@ export default function PaymentModal({
   isOpen,
   onClose,
   onSuccess,
-}: PaymentModalProps) {
+}: {
+  invoice: any | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
   const { token } = useUser();
-  const [amount, setAmount] = useState<string>(invoice ? String(invoice.amountDue) : "");
+  const [amount, setAmount] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState("CASH");
   const [transactionRef, setTransactionRef] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const targetDue = invoice 
+    ? (invoice.amountDue !== undefined ? invoice.amountDue : (invoice.balance !== undefined ? invoice.balance : 0))
+    : 0;
+  const targetTotal = invoice
+    ? (invoice.totalAmount !== undefined ? invoice.totalAmount : (invoice.totalCharges !== undefined ? invoice.totalCharges : 0))
+    : 0;
+  const targetPaid = invoice
+    ? (invoice.amountPaid !== undefined ? invoice.amountPaid : (invoice.totalPaid !== undefined ? invoice.totalPaid : 0))
+    : 0;
+
+  React.useEffect(() => {
+    if (invoice && isOpen) {
+      setAmount(String(targetDue));
+      setError(null);
+      setTransactionRef("");
+      setNotes("");
+    }
+  }, [invoice, isOpen, targetDue]);
 
   if (!isOpen || !invoice) return null;
 
@@ -43,9 +67,9 @@ export default function PaymentModal({
       return;
     }
 
-    if (payAmt > invoice.amountDue) {
+    if (payAmt > targetDue) {
       setError(
-        `Payment amount (₹${payAmt.toLocaleString()}) cannot exceed remaining balance due (₹${invoice.amountDue.toLocaleString()}).`
+        `Payment amount (₹${payAmt.toLocaleString()}) cannot exceed remaining balance due (₹${targetDue.toLocaleString()}).`
       );
       return;
     }
@@ -54,7 +78,8 @@ export default function PaymentModal({
     setError(null);
 
     try {
-      const res = await fetch(`/api/invoices/${invoice._id}/payment`, {
+      const targetId = invoice.invoiceDbId || invoice._id;
+      const res = await fetch(`/api/billing/${targetId}/payment`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -91,9 +116,9 @@ export default function PaymentModal({
               <Receipt className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Record Invoice Payment</h3>
+              <h3 className="text-base font-bold text-white">Record Folio Payment</h3>
               <p className="text-[11px] text-slate-400 font-mono">
-                {invoice.invoiceId} • Total: ₹{invoice.totalAmount.toLocaleString()}
+                {invoice.invoiceId || invoice.bookingId || "Folio"} • Total: ₹{targetTotal.toLocaleString()}
               </p>
             </div>
           </div>
@@ -115,19 +140,19 @@ export default function PaymentModal({
         <form onSubmit={handleRecordPayment} className="space-y-4">
           <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-xl space-y-1.5 text-xs">
             <div className="flex items-center justify-between text-slate-400">
-              <span>Total Invoiced:</span>
-              <span className="font-mono text-white">₹{invoice.totalAmount.toLocaleString()}</span>
+              <span>Total Charges:</span>
+              <span className="font-mono text-white">₹{targetTotal.toLocaleString()}</span>
             </div>
             <div className="flex items-center justify-between text-slate-400">
               <span>Already Paid:</span>
               <span className="font-mono text-emerald-400">
-                ₹{invoice.amountPaid.toLocaleString()}
+                ₹{targetPaid.toLocaleString()}
               </span>
             </div>
             <div className="flex items-center justify-between pt-1 border-t border-slate-800/80">
               <span className="font-bold text-slate-300">Remaining Balance Due:</span>
               <span className="font-bold text-amber-400 text-sm font-mono">
-                ₹{invoice.amountDue.toLocaleString()}
+                ₹{targetDue.toLocaleString()}
               </span>
             </div>
           </div>

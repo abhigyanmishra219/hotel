@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
       hotelId,
       createdAt: { $gte: dateRange.startDate, $lt: dateRange.endDate },
     })
-      .select("totalAmount amountPaid amountDue paymentStatus")
+      .select("totalAmount amountPaid amountDue paymentStatus paymentMethod")
       .lean();
 
     let totalInvoiced = 0;
@@ -62,6 +62,7 @@ export async function GET(req: NextRequest) {
     let paidCount = 0;
     let partialCount = 0;
     let unpaidCount = 0;
+    const methodsMap: Record<string, { method: string; count: number; collected: number }> = {};
 
     for (const inv of allWindowInvoices) {
       totalInvoiced += inv.totalAmount || 0;
@@ -71,7 +72,16 @@ export async function GET(req: NextRequest) {
       if (inv.paymentStatus === "PAID") paidCount++;
       else if (inv.paymentStatus === "PARTIALLY_PAID") partialCount++;
       else unpaidCount++;
+
+      const m = inv.paymentMethod || "CASH";
+      if (!methodsMap[m]) {
+        methodsMap[m] = { method: m, count: 0, collected: 0 };
+      }
+      methodsMap[m].count += 1;
+      methodsMap[m].collected += inv.amountPaid || 0;
     }
+
+    const methodsBreakdown = Object.values(methodsMap);
 
     const total = await Invoice.countDocuments(query);
     const invoices = await Invoice.find(query)
@@ -96,11 +106,14 @@ export async function GET(req: NextRequest) {
         totalInvoiced,
         totalPaid,
         totalOutstanding,
+        totalDue: totalOutstanding,
         paidCount,
         partialCount,
         unpaidCount,
         totalInvoices: allWindowInvoices.length,
+        invoicesCount: allWindowInvoices.length,
       },
+      methodsBreakdown,
       invoices,
       pagination: {
         total,

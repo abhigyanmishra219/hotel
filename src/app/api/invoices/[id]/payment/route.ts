@@ -27,14 +27,60 @@ export async function POST(
 
     await connectDB();
 
-    const invoice = await Invoice.findOne({
-      _id: id,
+    let invoice = await Invoice.findOne({
+      $or: [{ _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }, { invoiceId: id }].filter(Boolean) as any,
       hotelId: authUser.hotelId,
     });
 
     if (!invoice) {
+      // Check if id corresponds to an active booking
+      const Booking = (await import("@/models/Booking")).default;
+      const booking = await Booking.findOne({
+        $or: [{ _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }, { bookingId: id }].filter(Boolean) as any,
+        hotelId: authUser.hotelId,
+      });
+
+      if (booking) {
+        invoice = await Invoice.findOne({
+          bookingId: booking._id,
+          hotelId: authUser.hotelId,
+        });
+
+        if (!invoice) {
+          const roomAmount = booking.roomAmount || (booking.pricePerNight * booking.numberOfNights);
+          const discount = booking.discount || 0;
+          const tax = booking.tax || Math.round(Math.max(0, roomAmount - discount) * 0.12);
+          const totalAmount = Math.max(0, roomAmount - discount) + tax;
+
+          invoice = new Invoice({
+            hotelId: booking.hotelId,
+            bookingId: booking._id,
+            customerId: booking.customerId,
+            roomId: booking.roomId,
+            pricePerNight: booking.pricePerNight,
+            numberOfNights: booking.numberOfNights,
+            roomAmount,
+            additionalCharges: [],
+            discount,
+            tax,
+            totalAmount,
+            amountPaid: 0,
+            amountDue: totalAmount,
+            paymentStatus: "UNPAID",
+            paymentMethod,
+            paymentHistory: [],
+            generatedBy: authUser.userId as any,
+            generatedAt: new Date(),
+            notes: "Interim stay folio",
+          });
+          await invoice.save();
+        }
+      }
+    }
+
+    if (!invoice) {
       return NextResponse.json(
-        { error: "Invoice not found for your hotel property." },
+        { error: "Billing folio or invoice not found for your hotel property." },
         { status: 404 }
       );
     }

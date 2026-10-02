@@ -11,6 +11,7 @@ export interface IHotel extends Document {
   city?: string;
   state?: string;
   country?: string;
+  gstNumber?: string;
   status: HotelStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -56,6 +57,10 @@ const HotelSchema = new Schema<IHotel>(
       type: String,
       trim: true,
       default: "USA",
+    },
+    gstNumber: {
+      type: String,
+      trim: true,
     },
     status: {
       type: String,

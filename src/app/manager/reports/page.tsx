@@ -328,22 +328,22 @@ export default function ManagerReportsPage() {
               </div>
               <div className="flex items-baseline justify-between">
                 <p className="text-2xl font-black text-white">
-                  ₹{overviewData.metrics.financials.totalRevenue.toLocaleString()}
+                  ₹{(overviewData.metrics?.financials?.totalRevenue ?? 0).toLocaleString()}
                 </p>
                 <span
                   className={`text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5 ${
-                    overviewData.metrics.financials.deltaRevenue >= 0
+                    (overviewData.metrics?.financials?.deltaRevenue ?? 0) >= 0
                       ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
                       : "bg-rose-500/15 text-rose-400 border border-rose-500/30"
                   }`}
                 >
-                  {overviewData.metrics.financials.deltaRevenue >= 0 ? "+" : ""}₹
-                  {overviewData.metrics.financials.deltaRevenue.toLocaleString()}
+                  {(overviewData.metrics?.financials?.deltaRevenue ?? 0) >= 0 ? "+" : ""}₹
+                  {(overviewData.metrics?.financials?.deltaRevenue ?? 0).toLocaleString()}
                 </span>
               </div>
               <div className="text-[11px] text-slate-400 flex gap-3 pt-1 border-t border-slate-800/60">
                 <span className="text-emerald-400">
-                  Collected: ₹{overviewData.metrics.financials.collectedRevenue.toLocaleString()}
+                  Collected: ₹{(overviewData.metrics?.financials?.collectedRevenue ?? 0).toLocaleString()}
                 </span>
               </div>
             </div>
@@ -355,10 +355,10 @@ export default function ManagerReportsPage() {
                 <CreditCard className="w-4 h-4 text-rose-400" />
               </div>
               <p className="text-2xl font-black text-rose-400">
-                ₹{overviewData.metrics.financials.outstandingDue.toLocaleString()}
+                ₹{(overviewData.metrics?.financials?.outstandingDue ?? 0).toLocaleString()}
               </p>
               <div className="text-[11px] text-slate-400 pt-1 border-t border-slate-800/60">
-                <span>Invoices in period: {overviewData.metrics.financials.totalInvoices}</span>
+                <span>Invoices in period: {overviewData.metrics?.financials?.totalInvoices ?? 0}</span>
               </div>
             </div>
 
@@ -478,10 +478,10 @@ export default function ManagerReportsPage() {
                 Gross Revenue
               </span>
               <p className="text-3xl font-black text-white mt-1">
-                ₹{revenueData.summary.grossRevenue.toLocaleString()}
+                ₹{(revenueData.summary?.grossRevenue ?? revenueData.summary?.totalGrossRevenue ?? 0).toLocaleString()}
               </p>
               <p className="text-[11px] text-slate-500 mt-1">
-                From {revenueData.summary.invoicesCount} invoices in this period
+                From {revenueData.summary?.invoicesCount ?? revenueData.summary?.totalInvoices ?? 0} invoices in this period
               </p>
             </div>
             <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800">
@@ -489,7 +489,7 @@ export default function ManagerReportsPage() {
                 Collected Revenue
               </span>
               <p className="text-3xl font-black text-emerald-400 mt-1">
-                ₹{revenueData.summary.collectedRevenue.toLocaleString()}
+                ₹{(revenueData.summary?.collectedRevenue ?? revenueData.summary?.totalCollected ?? 0).toLocaleString()}
               </p>
               <p className="text-[11px] text-slate-500 mt-1">
                 Settled payments directly received
@@ -500,7 +500,7 @@ export default function ManagerReportsPage() {
                 Outstanding Due
               </span>
               <p className="text-3xl font-black text-rose-400 mt-1">
-                ₹{revenueData.summary.outstandingDue.toLocaleString()}
+                ₹{(revenueData.summary?.outstandingDue ?? revenueData.summary?.totalOutstanding ?? 0).toLocaleString()}
               </p>
               <p className="text-[11px] text-slate-500 mt-1">
                 Pending balance to be collected
@@ -515,11 +515,11 @@ export default function ManagerReportsPage() {
                 <TrendingUp className="w-4 h-4 text-emerald-400" /> Daily Revenue Trend
               </h3>
               <span className="text-xs text-slate-400 font-mono">
-                {revenueData.dailyRevenue.length} data points
+                {((revenueData.dailyRevenue || revenueData.timeSeries || []) as any[]).length} data points
               </span>
             </div>
 
-            {revenueData.dailyRevenue.length === 0 ? (
+            {((revenueData.dailyRevenue || revenueData.timeSeries || []) as any[]).length === 0 ? (
               <div className="py-12 text-center text-xs text-slate-500">
                 No revenue records found for this evaluation period.
               </div>
@@ -537,17 +537,19 @@ export default function ManagerReportsPage() {
 
                     {/* Generate Points */}
                     {(() => {
+                      const dailyList = (revenueData.dailyRevenue || revenueData.timeSeries || []) as any[];
                       const maxVal = Math.max(
-                        ...revenueData.dailyRevenue.map((d: any) => d.grossRevenue),
+                        ...dailyList.map((d: any) => d.grossRevenue ?? d.revenue ?? 0),
                         1
                       );
-                      const points = revenueData.dailyRevenue.map((d: any, idx: number) => {
+                      const points = dailyList.map((d: any, idx: number) => {
+                        const val = d.grossRevenue ?? d.revenue ?? 0;
                         const x =
-                          revenueData.dailyRevenue.length === 1
+                          dailyList.length === 1
                             ? 500
-                            : (idx / (revenueData.dailyRevenue.length - 1)) * 960 + 20;
-                        const y = 180 - (d.grossRevenue / maxVal) * 150;
-                        return { x, y, date: d.date, rev: d.grossRevenue };
+                            : (idx / (dailyList.length - 1)) * 960 + 20;
+                        const y = 180 - (val / maxVal) * 150;
+                        return { x, y, date: d.date, rev: val };
                       });
 
                       const pathD = points
@@ -604,18 +606,18 @@ export default function ManagerReportsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                  {revenueData.dailyRevenue.map((d: any) => (
+                  {((revenueData.dailyRevenue || revenueData.timeSeries || []) as any[]).map((d: any) => (
                     <tr key={d.date} className="hover:bg-slate-800/40">
                       <td className="p-3.5 font-mono text-white">{d.date}</td>
-                      <td className="p-3.5">{d.invoicesCount}</td>
+                      <td className="p-3.5">{d.invoicesCount ?? 0}</td>
                       <td className="p-3.5 font-bold text-white">
-                        ₹{d.grossRevenue.toLocaleString()}
+                        ₹{(d.grossRevenue ?? d.revenue ?? 0).toLocaleString()}
                       </td>
                       <td className="p-3.5 text-emerald-400">
-                        ₹{d.collectedRevenue.toLocaleString()}
+                        ₹{(d.collectedRevenue ?? d.collected ?? 0).toLocaleString()}
                       </td>
                       <td className="p-3.5 text-rose-400">
-                        ₹{d.outstandingDue.toLocaleString()}
+                        ₹{(d.outstandingDue ?? ((d.revenue || 0) - (d.collected || 0))).toLocaleString()}
                       </td>
                     </tr>
                   ))}
@@ -636,11 +638,11 @@ export default function ManagerReportsPage() {
                 Current Snapshot Occupancy
               </span>
               <p className="text-3xl font-black text-cyan-400 mt-1">
-                {occupancyData.currentSnapshot.occupancyRate}%
+                {occupancyData.currentSnapshot?.occupancyRate ?? occupancyData.currentSnapshot?.currentOccupancyRate ?? 0}%
               </p>
               <p className="text-[11px] text-slate-500 mt-1">
-                {occupancyData.currentSnapshot.occupiedRooms} occupied of{" "}
-                {occupancyData.currentSnapshot.sellableRooms} sellable rooms
+                {occupancyData.currentSnapshot?.occupiedRooms ?? occupancyData.currentSnapshot?.occupied ?? 0} occupied of{" "}
+                {occupancyData.currentSnapshot?.sellableRooms ?? 0} sellable rooms
               </p>
             </div>
             <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800">
@@ -648,11 +650,11 @@ export default function ManagerReportsPage() {
                 Historical Period Occupancy
               </span>
               <p className="text-3xl font-black text-amber-400 mt-1">
-                {occupancyData.historical.occupancyRate}%
+                {occupancyData.historical?.occupancyRate ?? occupancyData.historicalPerformance?.historicalOccupancyRate ?? 0}%
               </p>
               <p className="text-[11px] text-slate-500 mt-1">
-                {occupancyData.historical.totalOccupiedNights} room-nights out of{" "}
-                {occupancyData.historical.sellableRoomNights} capacity
+                {occupancyData.historical?.totalOccupiedNights ?? occupancyData.historicalPerformance?.totalOccupiedRoomNights ?? 0} room-nights out of{" "}
+                {occupancyData.historical?.sellableRoomNights ?? occupancyData.historicalPerformance?.availableSellableRoomNights ?? 0} capacity
               </p>
             </div>
             <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800">
@@ -660,10 +662,10 @@ export default function ManagerReportsPage() {
                 Sellable Room Inventory
               </span>
               <p className="text-3xl font-black text-white mt-1">
-                {occupancyData.currentSnapshot.sellableRooms} Rooms
+                {occupancyData.currentSnapshot?.sellableRooms ?? 0} Rooms
               </p>
               <p className="text-[11px] text-slate-500 mt-1">
-                {occupancyData.currentSnapshot.outOfServiceRooms} rooms out-of-service excluded
+                {occupancyData.currentSnapshot?.outOfServiceRooms ?? occupancyData.currentSnapshot?.outOfService ?? 0} rooms out-of-service excluded
               </p>
             </div>
           </div>
@@ -687,24 +689,24 @@ export default function ManagerReportsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                  {occupancyData.roomTypeBreakdown.map((r: any) => (
+                  {((occupancyData.roomTypeBreakdown || occupancyData.roomTypeStats || []) as any[]).map((r: any) => (
                     <tr key={r.roomType} className="hover:bg-slate-800/40">
                       <td className="p-3.5 font-bold text-white">{r.roomType}</td>
-                      <td className="p-3.5">{r.totalRooms}</td>
-                      <td className="p-3.5">{r.bookingsCount}</td>
-                      <td className="p-3.5">{r.occupiedNights} nights</td>
+                      <td className="p-3.5">{r.totalRooms ?? 0}</td>
+                      <td className="p-3.5">{r.bookingsCount ?? 0}</td>
+                      <td className="p-3.5">{r.occupiedNights ?? 0} nights</td>
                       <td className="p-3.5 font-bold text-amber-400">
-                        ₹{r.revenue.toLocaleString()}
+                        ₹{(r.revenue ?? 0).toLocaleString()}
                       </td>
                       <td className="p-3.5">
                         <div className="flex items-center gap-2">
                           <div className="w-16 h-2 bg-slate-800 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-cyan-400 rounded-full"
-                              style={{ width: `${Math.min(100, r.occupancyRate)}%` }}
+                              style={{ width: `${Math.min(100, r.occupancyRate ?? 0)}%` }}
                             />
                           </div>
-                          <span className="font-bold text-white">{r.occupancyRate}%</span>
+                          <span className="font-bold text-white">{r.occupancyRate ?? 0}%</span>
                         </div>
                       </td>
                     </tr>
@@ -721,23 +723,23 @@ export default function ManagerReportsPage() {
         <div className="space-y-6 animate-fadeIn">
           {/* Room Type Aggregates */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {roomsData.roomTypeSummary.map((t: any) => (
+            {((roomsData.roomTypeSummary || roomsData.roomTypes || []) as any[]).map((t: any) => (
               <div key={t.roomType} className="p-4 rounded-xl bg-slate-900 border border-slate-800">
                 <div className="flex justify-between items-center text-xs">
                   <span className="font-bold text-white text-sm">{t.roomType}</span>
-                  <span className="text-slate-400">{t.totalRooms} rooms</span>
+                  <span className="text-slate-400">{t.totalRooms ?? 0} rooms</span>
                 </div>
                 <div className="mt-3 space-y-1 text-xs">
                   <p className="flex justify-between text-slate-400">
-                    <span>Bookings:</span> <span className="font-bold text-white">{t.bookings}</span>
+                    <span>Bookings:</span> <span className="font-bold text-white">{t.bookings ?? t.totalBookings ?? 0}</span>
                   </p>
                   <p className="flex justify-between text-slate-400">
                     <span>Occupied Nights:</span>{" "}
-                    <span className="font-bold text-white">{t.occupiedNights}</span>
+                    <span className="font-bold text-white">{t.occupiedNights ?? 0}</span>
                   </p>
                   <p className="flex justify-between text-slate-400">
                     <span>Generated Revenue:</span>{" "}
-                    <span className="font-bold text-amber-400">₹{t.revenue.toLocaleString()}</span>
+                    <span className="font-bold text-amber-400">₹{(t.revenue ?? t.totalRevenue ?? 0).toLocaleString()}</span>
                   </p>
                 </div>
               </div>
@@ -748,7 +750,7 @@ export default function ManagerReportsPage() {
           <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
               <h3 className="text-sm font-bold text-white">Individual Room Performance Ledger</h3>
-              <span className="text-xs text-slate-400">{roomsData.rooms.length} Active Rooms</span>
+              <span className="text-xs text-slate-400">{(roomsData.rooms || []).length} Active Rooms</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left">
@@ -766,7 +768,7 @@ export default function ManagerReportsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                  {roomsData.rooms.map((r: any) => (
+                  {(roomsData.rooms || []).map((r: any) => (
                     <tr key={r.roomNumber} className="hover:bg-slate-800/40">
                       <td className="p-3.5 font-bold text-white">Room {r.roomNumber}</td>
                       <td className="p-3.5">{r.roomType}</td>
@@ -776,12 +778,12 @@ export default function ManagerReportsPage() {
                           {r.status}
                         </span>
                       </td>
-                      <td className="p-3.5">₹{r.pricePerNight.toLocaleString()}</td>
-                      <td className="p-3.5 font-semibold text-white">{r.totalBookings}</td>
-                      <td className="p-3.5 text-emerald-400">{r.completedStays}</td>
-                      <td className="p-3.5">{r.occupiedNights}</td>
+                      <td className="p-3.5">₹{(r.pricePerNight ?? 0).toLocaleString()}</td>
+                      <td className="p-3.5 font-semibold text-white">{r.totalBookings ?? 0}</td>
+                      <td className="p-3.5 text-emerald-400">{r.completedStays ?? 0}</td>
+                      <td className="p-3.5">{r.occupiedNights ?? 0}</td>
                       <td className="p-3.5 font-bold text-amber-400">
-                        ₹{r.revenue.toLocaleString()}
+                        ₹{(r.revenue ?? r.totalRevenue ?? 0).toLocaleString()}
                       </td>
                     </tr>
                   ))}
@@ -829,7 +831,7 @@ export default function ManagerReportsPage() {
                 Total Guest Spend
               </span>
               <p className="text-3xl font-black text-emerald-400 mt-1">
-                ₹{customersData.summary.totalRevenue.toLocaleString()}
+                ₹{(customersData.summary?.totalRevenue ?? 0).toLocaleString()}
               </p>
               <p className="text-[11px] text-slate-500 mt-1">Generated by guests in period</p>
             </div>
@@ -840,7 +842,7 @@ export default function ManagerReportsPage() {
             <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
               <h3 className="text-sm font-bold text-white">Customer History & Lifetime Spend</h3>
               <span className="text-xs text-slate-400">
-                Page {customersData.pagination.page} of {customersData.pagination.totalPages}
+                Page {customersData.pagination?.page ?? 1} of {customersData.pagination?.totalPages ?? 1}
               </span>
             </div>
             <div className="overflow-x-auto">
@@ -858,16 +860,16 @@ export default function ManagerReportsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                  {customersData.customers.map((c: any) => (
+                  {(customersData.customers || []).map((c: any) => (
                     <tr key={c.customerId} className="hover:bg-slate-800/40">
                       <td className="p-3.5 font-mono text-amber-400">{c.customerId}</td>
                       <td className="p-3.5 font-bold text-white">{c.fullName}</td>
                       <td className="p-3.5 text-slate-400">{c.phone}</td>
                       <td className="p-3.5">{c.location}</td>
-                      <td className="p-3.5 font-semibold text-white">{c.totalBookings}</td>
-                      <td className="p-3.5 text-emerald-400">{c.completedStays}</td>
-                      <td className="p-3.5 font-bold text-white">₹{c.totalSpent.toLocaleString()}</td>
-                      <td className="p-3.5 text-rose-400">₹{c.totalDue.toLocaleString()}</td>
+                      <td className="p-3.5 font-semibold text-white">{c.totalBookings ?? 0}</td>
+                      <td className="p-3.5 text-emerald-400">{c.completedStays ?? 0}</td>
+                      <td className="p-3.5 font-bold text-white">₹{(c.totalSpent ?? 0).toLocaleString()}</td>
+                      <td className="p-3.5 text-rose-400">₹{(c.totalDue ?? 0).toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1182,10 +1184,10 @@ export default function ManagerReportsPage() {
                 Total Invoiced
               </span>
               <p className="text-3xl font-black text-white mt-1">
-                ₹{paymentsData.summary.totalInvoiced.toLocaleString()}
+                ₹{(paymentsData.summary?.totalInvoiced ?? 0).toLocaleString()}
               </p>
               <p className="text-[11px] text-slate-500 mt-1">
-                {paymentsData.summary.invoicesCount} total invoices
+                {paymentsData.summary?.invoicesCount ?? paymentsData.summary?.totalInvoices ?? 0} total invoices
               </p>
             </div>
             <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800">
@@ -1193,10 +1195,10 @@ export default function ManagerReportsPage() {
                 Paid Invoices
               </span>
               <p className="text-3xl font-black text-emerald-400 mt-1">
-                {paymentsData.summary.paidCount}
+                {paymentsData.summary?.paidCount ?? 0}
               </p>
               <p className="text-[11px] text-slate-500 mt-1">
-                ₹{paymentsData.summary.totalPaid.toLocaleString()} collected
+                ₹{(paymentsData.summary?.totalPaid ?? 0).toLocaleString()} collected
               </p>
             </div>
             <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800">
@@ -1204,7 +1206,7 @@ export default function ManagerReportsPage() {
                 Partially Paid
               </span>
               <p className="text-3xl font-black text-amber-400 mt-1">
-                {paymentsData.summary.partialCount}
+                {paymentsData.summary?.partialCount ?? 0}
               </p>
               <p className="text-[11px] text-slate-500 mt-1">Partial balances remaining</p>
             </div>
@@ -1213,10 +1215,10 @@ export default function ManagerReportsPage() {
                 Unpaid Invoices
               </span>
               <p className="text-3xl font-black text-rose-400 mt-1">
-                {paymentsData.summary.unpaidCount}
+                {paymentsData.summary?.unpaidCount ?? 0}
               </p>
               <p className="text-[11px] text-slate-500 mt-1">
-                ₹{paymentsData.summary.totalDue.toLocaleString()} outstanding due
+                ₹{(paymentsData.summary?.totalDue ?? paymentsData.summary?.totalOutstanding ?? 0).toLocaleString()} outstanding due
               </p>
             </div>
           </div>
@@ -1227,14 +1229,14 @@ export default function ManagerReportsPage() {
               <CreditCard className="w-4 h-4 text-emerald-400" /> Payment Methods Distribution
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {paymentsData.methodsBreakdown.map((m: any) => (
+              {((paymentsData.methodsBreakdown || []) as any[]).map((m: any) => (
                 <div
                   key={m.method}
                   className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex justify-between items-center text-xs"
                 >
                   <span className="font-semibold text-slate-300">{m.method}</span>
                   <span className="font-bold text-white">
-                    ₹{m.collected.toLocaleString()} ({m.count})
+                    ₹{(m.collected ?? 0).toLocaleString()} ({m.count ?? 0})
                   </span>
                 </div>
               ))}

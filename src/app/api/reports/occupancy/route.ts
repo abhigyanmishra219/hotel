@@ -102,6 +102,9 @@ export async function GET(req: NextRequest) {
       roomType: type,
       totalRooms: d.total,
       occupiedRooms: d.occupied,
+      bookingsCount: 0,
+      occupiedNights: 0,
+      revenue: 0,
       occupancyRate: d.total > 0 ? Math.round((d.occupied / d.total) * 100) : 0,
     }));
 
@@ -119,10 +122,19 @@ export async function GET(req: NextRequest) {
         sellableRooms: currentSellableRooms,
         available: availableCount,
         occupied: occupiedCount,
+        occupiedRooms: occupiedCount,
         cleaning: cleaningCount,
         maintenance: maintenanceCount,
         outOfService: outOfServiceCount,
+        outOfServiceRooms: outOfServiceCount,
         currentOccupancyRate,
+        occupancyRate: currentOccupancyRate,
+      },
+      historical: {
+        windowDays,
+        sellableRoomNights: availableSellableRoomNights,
+        totalOccupiedNights: totalOccupiedRoomNights,
+        occupancyRate: historicalOccupancyRate,
       },
       historicalPerformance: {
         windowDays,
@@ -131,6 +143,7 @@ export async function GET(req: NextRequest) {
         historicalOccupancyRate,
       },
       roomTypeStats,
+      roomTypeBreakdown: roomTypeStats,
     });
   } catch (err) {
     return handleAuthError(err);

@@ -101,18 +101,25 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const roomPerformanceList = Array.from(roomPerformanceMap.values()).sort(
-      (a, b) => b.totalRevenue - a.totalRevenue || b.totalBookings - a.totalBookings
-    );
+    const roomPerformanceList = Array.from(roomPerformanceMap.values())
+      .map((r) => ({
+        ...r,
+        revenue: r.totalRevenue,
+      }))
+      .sort(
+        (a, b) => b.totalRevenue - a.totalRevenue || b.totalBookings - a.totalBookings
+      );
 
     // Grouping by Room Type
     const roomTypeSummaryMap: Record<string, {
       roomType: string;
       totalRooms: number;
       totalBookings: number;
+      bookings: number;
       completedStays: number;
       occupiedNights: number;
       totalRevenue: number;
+      revenue: number;
     }> = {};
 
     for (const r of roomPerformanceList) {
@@ -121,18 +128,22 @@ export async function GET(req: NextRequest) {
           roomType: r.roomType,
           totalRooms: 0,
           totalBookings: 0,
+          bookings: 0,
           completedStays: 0,
           occupiedNights: 0,
           totalRevenue: 0,
+          revenue: 0,
         };
       }
 
       const t = roomTypeSummaryMap[r.roomType];
       t.totalRooms += 1;
       t.totalBookings += r.totalBookings;
+      t.bookings += r.totalBookings;
       t.completedStays += r.completedStays;
       t.occupiedNights += r.occupiedNights;
       t.totalRevenue += r.totalRevenue;
+      t.revenue += r.totalRevenue;
     }
 
     const roomTypePerformance = Object.values(roomTypeSummaryMap).sort(
@@ -149,6 +160,7 @@ export async function GET(req: NextRequest) {
       },
       rooms: roomPerformanceList,
       roomTypes: roomTypePerformance,
+      roomTypeSummary: roomTypePerformance,
     });
   } catch (err) {
     return handleAuthError(err);

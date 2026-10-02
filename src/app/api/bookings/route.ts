@@ -154,7 +154,9 @@ export async function POST(req: NextRequest) {
       customerId,
       roomId,
       checkInDate: rawCheckIn,
+      checkInTime = "14:00",
       checkOutDate: rawCheckOut,
+      checkOutTime = "11:00",
       adults,
       children = 0,
       discount = 0,
@@ -166,6 +168,13 @@ export async function POST(req: NextRequest) {
     if (!customerId || !roomId || !rawCheckIn || !rawCheckOut) {
       return NextResponse.json(
         { error: "Customer, Room, Check-in Date, and Check-out Date are all required" },
+        { status: 400 }
+      );
+    }
+
+    if (!checkInTime) {
+      return NextResponse.json(
+        { error: "Check-in time is required" },
         { status: 400 }
       );
     }
@@ -193,6 +202,15 @@ export async function POST(req: NextRequest) {
     } catch (dateErr: any) {
       return NextResponse.json({ error: dateErr.message }, { status: 400 });
     }
+
+    // Combine date + time for checkInAt and checkOutAt
+    const [inHours, inMins] = (checkInTime || "14:00").split(":").map(Number);
+    const checkInAt = new Date(checkInDate);
+    checkInAt.setUTCHours(isNaN(inHours) ? 14 : inHours, isNaN(inMins) ? 0 : inMins, 0, 0);
+
+    const [outHours, outMins] = (checkOutTime || "11:00").split(":").map(Number);
+    const checkOutAt = new Date(checkOutDate);
+    checkOutAt.setUTCHours(isNaN(outHours) ? 11 : outHours, isNaN(outMins) ? 0 : outMins, 0, 0);
 
     // 3. Verify Customer belongs to this Hotel
     const customer = await Customer.findOne({
@@ -273,6 +291,8 @@ export async function POST(req: NextRequest) {
       roomId: room._id,
       checkInDate,
       checkOutDate,
+      checkInAt,
+      checkOutAt,
       numberOfGuests: totalGuests,
       adults: numAdults,
       children: numChildren,

@@ -35,6 +35,8 @@ export interface BookingDetailsData {
   };
   checkInDate: string;
   checkOutDate: string;
+  checkInAt?: string;
+  checkOutAt?: string;
   actualCheckIn?: string;
   actualCheckOut?: string;
   numberOfGuests: number;
@@ -222,14 +224,20 @@ export default function BookingDetailsModal({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
               <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
                 <span className="text-slate-500 text-[10px] block">SCHEDULED CHECK-IN</span>
-                <span className="font-bold text-white">
+                <span className="font-bold text-white block">
                   {new Date(booking.checkInDate).toLocaleDateString()}
+                </span>
+                <span className="text-[11px] text-amber-400 font-mono">
+                  {booking.checkInAt ? new Date(booking.checkInAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "14:00"}
                 </span>
               </div>
               <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
                 <span className="text-slate-500 text-[10px] block">SCHEDULED CHECK-OUT</span>
-                <span className="font-bold text-white">
+                <span className="font-bold text-white block">
                   {new Date(booking.checkOutDate).toLocaleDateString()}
+                </span>
+                <span className="text-[11px] text-slate-400 font-mono">
+                  {booking.checkOutAt ? new Date(booking.checkOutAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "11:00"}
                 </span>
               </div>
               <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">

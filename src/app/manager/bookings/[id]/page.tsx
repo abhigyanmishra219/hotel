@@ -153,6 +153,14 @@ export default function ManagerBookingDetailsPage({
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2.5">
+          <Link
+            href={`/manager/billing?bookingId=${booking._id}`}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold shadow-md transition"
+          >
+            <Receipt className="w-3.5 h-3.5" />
+            <span>Billing &amp; Folio</span>
+          </Link>
+
           {booking.status === "CONFIRMED" && (
             <>
               <Link

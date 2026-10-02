@@ -67,61 +67,133 @@ export async function POST(
     const transactionRef = body.transactionRef ? String(body.transactionRef).trim() : undefined;
     const notes = body.notes ? String(body.notes).trim() : undefined;
 
-    // 4. Server-Side Authoritative Billing Calculation
-    const actualCheckOut = new Date();
+    // 4. Resolve Actual Checkout Timestamp (Date + Time)
+    let actualCheckOut = new Date();
+    if (body.checkOutDate) {
+      const selectedDate = new Date(body.checkOutDate);
+      if (isNaN(selectedDate.getTime())) {
+        return NextResponse.json(
+          { error: "Invalid checkout date provided." },
+          { status: 400 }
+        );
+      }
+
+      const timeStr = body.checkOutTime || "11:00";
+      const [h, m] = timeStr.split(":").map(Number);
+      selectedDate.setHours(isNaN(h) ? 11 : h, isNaN(m) ? 0 : m, 0, 0);
+      actualCheckOut = selectedDate;
+    }
+
+    // Validation: Checkout cannot occur before actual check-in or scheduled check-in
+    const checkInReference = booking.actualCheckInAt || booking.actualCheckInDate || booking.checkInAt || booking.checkInDate;
+    if (actualCheckOut.getTime() < new Date(checkInReference).getTime()) {
+      return NextResponse.json(
+        {
+          error: `Checkout time (${actualCheckOut.toLocaleString()}) cannot be earlier than check-in time (${new Date(
+            checkInReference
+          ).toLocaleString()}).`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // 5. Create or Update Invoice Document
+    let invoice = await Invoice.findOne({
+      bookingId: booking._id,
+      hotelId: authUser.hotelId,
+    });
+
+    const priorPaid = invoice ? (Number(invoice.amountPaid) || 0) : 0;
+    const combinedPaid = priorPaid + amountPaid;
+
+    const mergedAdditionalCharges = [
+      ...(invoice?.additionalCharges || []),
+      ...additionalCharges,
+    ];
+
     const billing = calculateCheckoutBilling({
       pricePerNight: booking.pricePerNight,
       scheduledCheckIn: booking.checkInDate,
       scheduledCheckOut: booking.checkOutDate,
       actualCheckOut,
-      additionalCharges,
+      additionalCharges: mergedAdditionalCharges,
       discount,
-      amountPaid,
+      amountPaid: combinedPaid,
       taxRate: 0.12,
     });
 
-    // 5. Create or Update Invoice Document
-    const paymentHistory =
-      billing.amountPaid > 0
-        ? [
-            {
-              amount: billing.amountPaid,
-              paymentMethod,
-              transactionRef,
-              recordedBy: authUser.userId as any,
-              recordedAt: actualCheckOut,
-              notes: "Check-out settlement payment",
-            },
-          ]
-        : [];
+    if (invoice) {
+      // Update existing invoice
+      invoice.pricePerNight = billing.pricePerNight;
+      invoice.numberOfNights = billing.billableNights;
+      invoice.roomAmount = billing.roomAmount;
+      invoice.additionalCharges = mergedAdditionalCharges;
+      invoice.discount = billing.discount;
+      invoice.tax = billing.tax;
+      invoice.totalAmount = billing.totalAmount;
+      invoice.amountPaid = billing.amountPaid;
+      invoice.amountDue = billing.amountDue;
+      invoice.paymentStatus = billing.paymentStatus;
+      invoice.paymentMethod = paymentMethod;
+      if (notes) {
+        invoice.notes = invoice.notes ? `${invoice.notes}; ${notes}` : notes;
+      }
+      if (amountPaid > 0) {
+        invoice.paymentHistory.push({
+          amount: amountPaid,
+          paymentMethod,
+          transactionRef,
+          recordedBy: authUser.userId as any,
+          recordedAt: actualCheckOut,
+          notes: notes ? `Check-out settlement: ${notes}` : "Check-out settlement payment",
+        });
+      }
+      await invoice.save();
+    } else {
+      // Create initial final invoice
+      const paymentHistory =
+        amountPaid > 0
+          ? [
+              {
+                amount: amountPaid,
+                paymentMethod,
+                transactionRef,
+                recordedBy: authUser.userId as any,
+                recordedAt: actualCheckOut,
+                notes: notes ? `Check-out settlement: ${notes}` : "Check-out settlement payment",
+              },
+            ]
+          : [];
 
-    const invoice = new Invoice({
-      hotelId: booking.hotelId,
-      bookingId: booking._id,
-      customerId: booking.customerId,
-      roomId: booking.roomId,
-      pricePerNight: billing.pricePerNight,
-      numberOfNights: billing.billableNights,
-      roomAmount: billing.roomAmount,
-      additionalCharges,
-      discount: billing.discount,
-      tax: billing.tax,
-      totalAmount: billing.totalAmount,
-      amountPaid: billing.amountPaid,
-      amountDue: billing.amountDue,
-      paymentStatus: billing.paymentStatus,
-      paymentMethod,
-      paymentHistory,
-      generatedBy: authUser.userId as any,
-      generatedAt: actualCheckOut,
-      notes: notes || "",
-    });
+      invoice = new Invoice({
+        hotelId: booking.hotelId,
+        bookingId: booking._id,
+        customerId: booking.customerId,
+        roomId: booking.roomId,
+        pricePerNight: billing.pricePerNight,
+        numberOfNights: billing.billableNights,
+        roomAmount: billing.roomAmount,
+        additionalCharges: mergedAdditionalCharges,
+        discount: billing.discount,
+        tax: billing.tax,
+        totalAmount: billing.totalAmount,
+        amountPaid: billing.amountPaid,
+        amountDue: billing.amountDue,
+        paymentStatus: billing.paymentStatus,
+        paymentMethod,
+        paymentHistory,
+        generatedBy: authUser.userId as any,
+        generatedAt: actualCheckOut,
+        notes: notes || "",
+      });
 
-    await invoice.save();
+      await invoice.save();
+    }
 
     // 6. Complete Booking Record
     booking.status = "COMPLETED";
     booking.actualCheckOutDate = actualCheckOut;
+    booking.actualCheckOutAt = actualCheckOut;
     booking.checkedOutBy = authUser.userId as any;
     if (notes) {
       booking.checkOutNotes = notes;

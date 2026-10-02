@@ -41,7 +41,7 @@ export default function ManagerHeader({
 
   return (
     <header
-      className={`h-18 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-30 transition-all duration-300 ease-in-out px-4 sm:px-6 lg:px-8 flex items-center justify-between
+      className={`h-18 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-30 transition-all duration-300 ease-in-out px-4 sm:px-6 lg:px-8 flex items-center justify-between print:hidden
         ${isCollapsed ? "lg:pl-24" : "lg:pl-68"}
       `}
     >

@@ -103,10 +103,10 @@ export async function POST(
       // Body is optional
     }
 
-    // 6. Atomically perform Check-in
     const now = new Date();
     booking.status = "CHECKED_IN";
     booking.checkedInAt = now;
+    booking.actualCheckInAt = now;
     booking.checkedInBy = authUser.userId as any;
     booking.actualCheckInDate = now;
     if (checkInNotes) {
