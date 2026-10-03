@@ -1,4 +1,5 @@
 import mongoose, { Document, Model, Schema, Types } from "mongoose";
+import SubscriptionPlan from "./SubscriptionPlan";
 import type {
   HotelSubscriptionStatus,
   PaymentStatus,

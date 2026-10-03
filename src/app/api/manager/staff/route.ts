@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import connectToDatabase from "@/lib/mongodb";
 import User from "@/models/User";
 import Hotel from "@/models/Hotel";
+import SubscriptionPlan from "@/models/SubscriptionPlan";
+import HotelSubscription from "@/models/HotelSubscription";
 import { authenticateManager, handleAuthError } from "@/lib/auth";
 import { USER_ROLES } from "@/types/roles";
 import { generateTemporaryPassword } from "@/types/staff";
@@ -156,7 +158,7 @@ export async function POST(req: NextRequest) {
     const existing = await User.findOne({ email: cleanEmail });
     if (existing) {
       return NextResponse.json(
-        { error: `An account with email '${cleanEmail}' already exists` },
+        { success: false, error: "An account with this email already exists." },
         { status: 409 }
       );
     }
@@ -210,14 +212,27 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
+    console.error("Staff creation error:", error);
     const subError = handleSubscriptionEnforcementError(error);
     if (subError) return subError;
+
     if (error.code === 11000) {
       return NextResponse.json(
-        { error: "A user with this email already exists" },
+        { success: false, error: "An account with this email already exists." },
         { status: 409 }
       );
     }
+
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors || {})
+        .map((e: any) => e.message)
+        .filter(Boolean);
+      return NextResponse.json(
+        { success: false, error: messages[0] || "Validation failed." },
+        { status: 400 }
+      );
+    }
+
     return handleAuthError(error);
   }
 }

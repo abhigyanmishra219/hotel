@@ -2,7 +2,7 @@ import mongoose, { Types } from "mongoose";
 import { NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
 import HotelSubscription, { IHotelSubscription } from "@/models/HotelSubscription";
-import { ISubscriptionPlan } from "@/models/SubscriptionPlan";
+import SubscriptionPlan, { ISubscriptionPlan } from "@/models/SubscriptionPlan";
 import Room from "@/models/Room";
 import User from "@/models/User";
 import { USER_ROLES } from "@/types/roles";
@@ -96,7 +96,10 @@ export async function getHotelActiveSubscription(
   let sub: any = await HotelSubscription.findOne({
     hotelId: formattedHotelId,
     isCurrent: true,
-  }).populate<{ planId: ISubscriptionPlan }>("planId");
+  }).populate<{ planId: ISubscriptionPlan }>({
+    path: "planId",
+    model: SubscriptionPlan,
+  });
 
   // Fallback to latest subscription if isCurrent flag is missing
   if (!sub) {
@@ -104,7 +107,10 @@ export async function getHotelActiveSubscription(
       hotelId: formattedHotelId,
     })
       .sort({ createdAt: -1 })
-      .populate<{ planId: ISubscriptionPlan }>("planId");
+      .populate<{ planId: ISubscriptionPlan }>({
+        path: "planId",
+        model: SubscriptionPlan,
+      });
   }
 
   if (!sub || !sub.planId) {
@@ -350,38 +356,50 @@ export async function assertReceptionistLimit(
  * Central Error Handler helper for subscription limits and feature errors in Next.js Route Handlers.
  */
 export function handleSubscriptionEnforcementError(error: unknown) {
-  if (error instanceof SubscriptionLimitError) {
+  if (
+    error instanceof SubscriptionLimitError ||
+    (error as any)?.name === "SubscriptionLimitError"
+  ) {
+    const err = error as SubscriptionLimitError;
     return NextResponse.json(
       {
-        error: error.message,
-        code: error.code,
-        limitType: error.limitType,
-        current: error.currentCount,
-        max: error.maxLimit,
-        planName: error.planName,
+        error: err.message,
+        code: err.code,
+        limitType: err.limitType,
+        current: err.currentCount,
+        max: err.maxLimit,
+        planName: err.planName,
       },
       { status: 403 }
     );
   }
 
-  if (error instanceof SubscriptionFeatureError) {
+  if (
+    error instanceof SubscriptionFeatureError ||
+    (error as any)?.name === "SubscriptionFeatureError"
+  ) {
+    const err = error as SubscriptionFeatureError;
     return NextResponse.json(
       {
-        error: error.message,
-        code: error.code,
-        feature: error.feature,
-        planName: error.planName,
+        error: err.message,
+        code: err.code,
+        feature: err.feature,
+        planName: err.planName,
       },
       { status: 403 }
     );
   }
 
-  if (error instanceof SubscriptionStatusError) {
+  if (
+    error instanceof SubscriptionStatusError ||
+    (error as any)?.name === "SubscriptionStatusError"
+  ) {
+    const err = error as SubscriptionStatusError;
     return NextResponse.json(
       {
-        error: error.message,
-        code: error.code,
-        status: error.status,
+        error: err.message,
+        code: err.code,
+        status: err.status,
       },
       { status: 403 }
     );
