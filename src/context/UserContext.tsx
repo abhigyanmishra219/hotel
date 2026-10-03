@@ -16,6 +16,15 @@ export interface User {
   email: string;
   role: UserRole;
   hotelId?: string | null;
+  hotelName?: string | null;
+  hotel?: {
+    name?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    phone?: string;
+  } | null;
+  shift?: string | null;
   mustChangePassword?: boolean;
 }
 
@@ -51,6 +60,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
           setUserState({
             ...parsedUser,
             hotelId: parsedUser.hotelId ?? null,
+            hotelName: parsedUser.hotelName ?? parsedUser.hotel?.name ?? null,
+            hotel: parsedUser.hotel ?? null,
             mustChangePassword: Boolean(parsedUser.mustChangePassword),
           });
           return;
@@ -114,6 +125,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const sanitizedUser: User = {
         ...userData,
         hotelId: userData.hotelId ?? null,
+        hotelName: userData.hotelName ?? userData.hotel?.name ?? null,
+        hotel: userData.hotel ?? null,
         mustChangePassword: Boolean(userData.mustChangePassword),
       };
       setUserState(sanitizedUser);
@@ -134,6 +147,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
             email: decoded.email || "",
             role,
             hotelId: decoded.hotelId ?? null,
+            hotelName: decoded.hotelName ?? null,
+            hotel: decoded.hotelName ? { name: decoded.hotelName } : null,
             mustChangePassword: Boolean(decoded.mustChangePassword),
           };
           setUserState(decodedUser);

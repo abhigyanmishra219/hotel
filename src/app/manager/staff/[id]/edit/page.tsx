@@ -37,7 +37,6 @@ export default function EditStaffPage({ params }: PageProps) {
     isActive: true,
     role: "STAFF",
     hotelName: "",
-    hotelCode: "",
   });
 
   useEffect(() => {
@@ -63,8 +62,7 @@ export default function EditStaffPage({ params }: PageProps) {
           phone: s.phone || "",
           isActive: Boolean(s.isActive),
           role: s.role || "STAFF",
-          hotelName: s.hotelName || "Your Hotel",
-          hotelCode: s.hotelCode || "HOT-000000",
+          hotelName: s.hotelName || "Grand Royale Hotel",
         });
       } catch (err: any) {
         setError(err.message || "Failed to load staff member");

@@ -37,7 +37,6 @@ export default function EditReceptionistPage({ params }: PageProps) {
     isActive: true,
     role: "RECEPTIONIST",
     hotelName: "",
-    hotelCode: "",
   });
 
   useEffect(() => {
@@ -63,8 +62,7 @@ export default function EditReceptionistPage({ params }: PageProps) {
           phone: r.phone || "",
           isActive: Boolean(r.isActive),
           role: r.role || "RECEPTIONIST",
-          hotelName: r.hotelName || "Your Hotel",
-          hotelCode: r.hotelCode || "HOT-000000",
+          hotelName: r.hotelName || "Grand Royale Hotel",
         });
       } catch (err: any) {
         setError(err.message || "Failed to load receptionist");

@@ -57,7 +57,6 @@ export default function ManagerRoomsListPage() {
   } | null>(null);
   const [availableFloors, setAvailableFloors] = useState<string[]>([]);
   const [hotelName, setHotelName] = useState("");
-  const [hotelCode, setHotelCode] = useState("");
 
   // Filters and search state
   const [search, setSearch] = useState("");
@@ -107,7 +106,6 @@ export default function ManagerRoomsListPage() {
       setQuota(data.quota || null);
       setAvailableFloors(data.availableFloors || []);
       if (data.hotelName) setHotelName(data.hotelName);
-      if (data.hotelCode) setHotelCode(data.hotelCode);
     } catch (err: any) {
       console.error("Error fetching rooms:", err);
       setError(err.message || "Failed to load room inventory");
@@ -270,8 +268,7 @@ export default function ManagerRoomsListPage() {
           </div>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
             Manage rooms, guest capacity, price per night, and live housekeeping statuses for{" "}
-            <strong className="text-slate-200">{hotelName || "Your Hotel"}</strong> (
-            {hotelCode || (user?.hotelId ? `HOT-${String(user.hotelId).slice(-6).toUpperCase()}` : "HOTEL")}).
+            <strong className="text-slate-200">{hotelName || user?.hotelName || "Your Hotel"}</strong>.
           </p>
         </div>
 

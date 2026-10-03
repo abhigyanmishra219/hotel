@@ -11,6 +11,7 @@ export interface UserTokenPayload extends JwtPayload {
   email: string;
   role: UserRole;
   hotelId?: string | null;
+  hotelName?: string | null;
   mustChangePassword?: boolean;
 }
 
@@ -30,6 +31,7 @@ export function createToken(
     email: payload.email,
     role: payload.role,
     hotelId: payload.hotelId ?? null,
+    hotelName: payload.hotelName ?? null,
     mustChangePassword: Boolean(payload.mustChangePassword),
   };
 

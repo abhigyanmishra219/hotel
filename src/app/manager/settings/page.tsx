@@ -214,16 +214,16 @@ export default function ManagerSettingsPage() {
               Assigned Hotel
             </span>
             <p className="font-bold text-white text-sm truncate">
-              {hotelInfo?.name || "Grand Royale"}
+              {hotelInfo?.name || user?.hotelName || "Grand Royale Hotel"}
             </p>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
             <span className="text-[11px] uppercase font-bold text-slate-400 block mb-1">
-              Hotel ID Code
+              Property Location
             </span>
-            <p className="font-mono font-bold text-amber-300 text-sm">
-              {hotelInfo?.hotelCode || (user?.hotelId ? `HOT-${String(user.hotelId).slice(-6).toUpperCase()}` : "HOT-000001")}
+            <p className="font-medium text-slate-300 text-sm truncate">
+              {hotelInfo?.city ? `${hotelInfo.city}${hotelInfo.state ? `, ${hotelInfo.state}` : ""}` : (hotelInfo?.address || "Dehradun, Uttarakhand")}
             </p>
           </div>
         </div>

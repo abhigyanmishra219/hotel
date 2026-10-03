@@ -60,11 +60,8 @@ export default function ManagerHeader({
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20 text-amber-300 text-xs font-semibold">
               <HotelIcon className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden xs:inline truncate max-w-[150px] sm:max-w-[200px]">
-                {hotelName || "Grand Royale"}
-              </span>
-              <span className="font-mono text-[10px] text-amber-400/80 bg-amber-400/10 px-1.5 py-0.2 rounded border border-amber-400/30">
-                {hotelCode || (user?.hotelId ? `HOT-${String(user.hotelId).slice(-6).toUpperCase()}` : "HOTEL")}
+              <span className="hidden xs:inline truncate max-w-[200px]">
+                {hotelName || user?.hotelName || "Grand Royale Hotel"}
               </span>
             </div>
 

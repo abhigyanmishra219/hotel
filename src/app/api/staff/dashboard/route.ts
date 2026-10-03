@@ -197,13 +197,10 @@ export async function GET(req: NextRequest) {
         name: authUser.name,
         email: authUser.email,
         role: authUser.role,
-        hotelId: authUser.hotelId,
         shift: assignedShift,
       },
       hotel: {
-        id: hotel._id,
         name: hotel.name,
-        hotelCode: hotel.hotelCode,
         status: hotel.status,
       },
       summary: {

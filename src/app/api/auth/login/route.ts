@@ -67,8 +67,11 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Verify Hotel Status for Hotel Staff / Managers
+    let hotelName: string | null = null;
+    let hotelInfo: { name: string; address?: string; city?: string; state?: string; phone?: string } | null = null;
+
     if (user.role !== USER_ROLES.SYSTEM_ADMIN && user.hotelId) {
-      const hotel = await Hotel.findById(user.hotelId).select("status name").lean();
+      const hotel = await Hotel.findById(user.hotelId).select("status name address city state phone").lean();
       if (!hotel) {
         return NextResponse.json(
           { error: "Assigned hotel property not found." },
@@ -83,6 +86,14 @@ export async function POST(req: NextRequest) {
           { status: 403 }
         );
       }
+      hotelName = hotel.name;
+      hotelInfo = {
+        name: hotel.name,
+        address: hotel.address,
+        city: hotel.city,
+        state: hotel.state,
+        phone: hotel.phone,
+      };
     }
 
     const hotelIdStr = user.hotelId ? user.hotelId.toString() : null;
@@ -95,6 +106,7 @@ export async function POST(req: NextRequest) {
       email: user.email,
       role: user.role,
       hotelId: hotelIdStr,
+      hotelName,
       mustChangePassword,
     });
 
@@ -122,6 +134,8 @@ export async function POST(req: NextRequest) {
         email: user.email,
         role: user.role,
         hotelId: hotelIdStr,
+        hotelName,
+        hotel: hotelInfo,
         mustChangePassword,
       },
     });

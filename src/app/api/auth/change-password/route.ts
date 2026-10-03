@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import connectToDatabase from "@/lib/mongodb";
 import User from "@/models/User";
+import Hotel from "@/models/Hotel";
 import { requireAuth, handleAuthError } from "@/lib/auth";
 import { createToken } from "@/lib/jwt";
 import { logAudit } from "@/lib/audit";
@@ -124,6 +125,11 @@ export async function POST(req: NextRequest) {
     await user.save();
 
     const hotelIdStr = user.hotelId ? user.hotelId.toString() : null;
+    let hotelName: string | null = null;
+    if (user.hotelId) {
+      const hotelDoc = await Hotel.findById(user.hotelId).select("name").lean();
+      if (hotelDoc) hotelName = hotelDoc.name;
+    }
 
     // 9. Audit log password change
     await logAudit({
@@ -147,6 +153,7 @@ export async function POST(req: NextRequest) {
       email: user.email,
       role: user.role,
       hotelId: hotelIdStr,
+      hotelName,
       mustChangePassword: false,
     });
 
@@ -160,6 +167,7 @@ export async function POST(req: NextRequest) {
         email: user.email,
         role: user.role,
         hotelId: hotelIdStr,
+        hotelName,
         mustChangePassword: false,
       },
     });

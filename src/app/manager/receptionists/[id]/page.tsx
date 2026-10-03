@@ -259,14 +259,7 @@ export default function ReceptionistDetailsPage({ params }: PageProps) {
           <div className="space-y-3 text-xs">
             <div>
               <span className="text-slate-400 font-medium block mb-1">Hotel Property</span>
-              <p className="text-sm font-semibold text-white">{receptionist.hotelName || "Your Hotel"}</p>
-            </div>
-
-            <div>
-              <span className="text-slate-400 font-medium block mb-1">Hotel Business Code</span>
-              <span className="font-mono text-cyan-400 font-semibold bg-slate-800 px-2.5 py-1 rounded-md border border-slate-700 inline-block">
-                {receptionist.hotelCode || "HOT-000001"}
-              </span>
+              <p className="text-sm font-semibold text-white">{receptionist.hotelName || "Grand Royale Hotel"}</p>
             </div>
 
             <div>

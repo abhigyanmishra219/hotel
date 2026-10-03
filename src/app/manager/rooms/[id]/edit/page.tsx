@@ -225,7 +225,7 @@ export default function EditRoomPage({ params }: PageProps) {
 
           <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/60 px-3 py-1.5 rounded-xl border border-slate-700/50 self-start sm:self-auto">
             <ShieldCheck className="w-4 h-4 text-amber-400" />
-            <span>{hotelInfo?.name || "Grand Royale"} ({hotelInfo?.hotelCode || "HOTEL"})</span>
+            <span>{hotelInfo?.name || user?.hotelName || "Grand Royale Hotel"}</span>
           </div>
         </div>
 

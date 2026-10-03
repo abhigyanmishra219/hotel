@@ -158,9 +158,11 @@ export default function HotelOverviewCard({
                 <span className="text-[10px] uppercase font-bold text-amber-400 tracking-widest">
                   MY HOTEL
                 </span>
-                <span className="text-[11px] font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md border border-slate-700">
-                  {hotel?.hotelCode || "HOT-000000"}
-                </span>
+                {hotel?.city && (
+                  <span className="text-[11px] text-slate-300 bg-slate-800 px-2 py-0.5 rounded-md border border-slate-700">
+                    {hotel.city}{hotel.state ? `, ${hotel.state}` : ""}
+                  </span>
+                )}
               </div>
               <h2 className="text-2xl font-extrabold text-white tracking-tight mt-0.5">
                 {hotel?.name || "Assigned Hotel"}
@@ -176,16 +178,16 @@ export default function HotelOverviewCard({
 
         {/* 4 Details Columns */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* 1. Property Code & Status */}
+          {/* 1. Property Status */}
           <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
             <span className="text-[11px] text-slate-400 uppercase font-medium tracking-wider block mb-1">
-              Hotel ID &amp; Status
+              Property Status
             </span>
             <div className="flex items-center justify-between">
-              <span className="font-mono text-sm font-bold text-white">
-                {hotel?.hotelCode || "N/A"}
-              </span>
               <span className="text-xs font-semibold text-slate-300">
+                Operational Status
+              </span>
+              <span className="text-xs font-bold text-emerald-400">
                 {hotel?.status || "ACTIVE"}
               </span>
             </div>

@@ -155,7 +155,7 @@ export default function AddRoomPage() {
 
           <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/60 px-3 py-1.5 rounded-xl border border-slate-700/50 self-start sm:self-auto">
             <ShieldCheck className="w-4 h-4 text-amber-400" />
-            <span>Scoped to: {user?.hotelId ? `HOT-${String(user.hotelId).slice(-6).toUpperCase()}` : "Your Hotel"}</span>
+            <span>Scoped to: {user?.hotelName || "Your Hotel"}</span>
           </div>
         </div>
 

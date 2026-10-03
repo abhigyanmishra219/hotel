@@ -355,11 +355,6 @@ export default function ReceptionistDashboardPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400 mt-0.5">
-                {data?.hotel?.hotelCode && (
-                  <span className="font-mono text-cyan-400 font-semibold">
-                    {data.hotel.hotelCode}
-                  </span>
-                )}
                 {data?.hotel?.phone && (
                   <span className="inline-flex items-center gap-1">
                     <Phone className="w-3 h-3 text-slate-500" />

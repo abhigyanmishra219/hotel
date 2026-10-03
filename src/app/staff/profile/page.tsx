@@ -26,6 +26,28 @@ export default function StaffProfilePage() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
+  const [profileData, setProfileData] = useState<{
+    user?: { name: string; email: string; role: string; shift?: string };
+    hotel?: { name: string; address?: string; city?: string; state?: string; country?: string; phone?: string };
+  } | null>(null);
+
+  React.useEffect(() => {
+    async function loadProfile() {
+      try {
+        const headers: Record<string, string> = {};
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+        const res = await fetch("/api/staff/profile", { headers });
+        if (res.ok) {
+          const data = await res.json();
+          setProfileData(data);
+        }
+      } catch {
+        // Fallback to user context
+      }
+    }
+    loadProfile();
+  }, [token]);
+
   // Password change state
   const [formData, setFormData] = useState({
     currentPassword: "",
@@ -195,7 +217,7 @@ export default function StaffProfilePage() {
                     </label>
                     <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between">
                       <span className="text-white font-medium">
-                        {(user as any)?.shift || "09:00 AM - 06:00 PM (General Shift)"}
+                        {profileData?.user?.shift || (user as any)?.shift || "09:00 AM - 06:00 PM (General Shift)"}
                       </span>
                       <span className="text-[10px] font-mono text-slate-400">Read-Only</span>
                     </div>
@@ -208,8 +230,8 @@ export default function StaffProfilePage() {
                     <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-amber-400" />
-                        <span className="text-white font-mono">
-                          {user?.hotelId ? String(user.hotelId) : "Assigned Hotel"}
+                        <span className="text-white font-medium">
+                          {profileData?.hotel?.name || user?.hotelName || "Grand Royale Hotel"}
                         </span>
                       </div>
                       <span className="text-[10px] font-mono text-slate-400">Strictly Isolated</span>

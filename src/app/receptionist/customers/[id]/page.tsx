@@ -296,10 +296,7 @@ export default function ReceptionistCustomerDetailsPage({ params }: PageProps) {
               <span className="text-slate-400 font-medium block mb-1">Registered Hotel Property</span>
               <p className="text-white font-semibold flex items-center gap-2">
                 <Building2 className="w-3.5 h-3.5 text-cyan-400" />
-                <span>{customer.hotelName || "Your Hotel"}</span>
-                <span className="text-[10px] font-mono text-cyan-400 bg-slate-800 px-1.5 py-0.5 rounded">
-                  {customer.hotelCode || "HOT-000000"}
-                </span>
+                <span>{customer.hotelName || "Grand Royale Hotel"}</span>
               </p>
             </div>
           </div>

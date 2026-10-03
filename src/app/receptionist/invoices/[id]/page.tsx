@@ -160,7 +160,7 @@ export default function ReceptionistInvoiceDetailsPage({
             <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-400 print:text-neutral-600 mt-1">
               <span>Phone: {hotel?.phone || "Front Desk"}</span>
               {hotel?.email && <span>• Email: {hotel.email}</span>}
-              <span>• Property ID: {hotel?.hotelCode || "HOTEL"}</span>
+              {hotel?.gstNumber && <span>• GSTIN: {hotel.gstNumber}</span>}
             </div>
           </div>
 

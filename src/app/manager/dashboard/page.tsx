@@ -97,9 +97,9 @@ export default function ManagerDashboardPage() {
             <p className="text-slate-400 text-xs sm:text-sm mt-1 max-w-2xl">
               Operating property{" "}
               <strong className="text-slate-200">
-                {hotel?.name || "Your Assigned Hotel"}
-              </strong>{" "}
-              ({hotel?.hotelCode || (user?.hotelId ? `HOT-${String(user.hotelId).slice(-6).toUpperCase()}` : "HOTEL")}). Manage guest rooms, reservations, staff shifts, and hotel operations.
+                {hotel?.name || user?.hotelName || "Your Assigned Hotel"}
+              </strong>
+              {hotel?.city ? ` (${hotel.city}${hotel.state ? `, ${hotel.state}` : ""})` : ""}. Manage guest rooms, reservations, staff shifts, and hotel operations.
             </p>
           </div>
 
@@ -393,8 +393,8 @@ export default function ManagerDashboardPage() {
             </h4>
             <p className="text-xs text-slate-400 mt-0.5">
               Your account is cryptographically bound to{" "}
-              <strong className="text-amber-300 font-mono">
-                {hotel?.hotelCode || "HOT-000001"}
+              <strong className="text-amber-300 font-semibold">
+                {hotel?.name || user?.hotelName || "Grand Royale Hotel"}
               </strong>
               . All room inventory and database transactions are automatically scoped to this hotel.
             </p>

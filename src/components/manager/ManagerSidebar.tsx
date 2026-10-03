@@ -218,12 +218,9 @@ export default function ManagerSidebar({
               <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider">
                 Assigned Property
               </span>
-              <span className="text-[10px] font-mono text-slate-400 bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-700/40">
-                {hotelCode || (user?.hotelId ? `HOT-${String(user.hotelId).slice(-6).toUpperCase()}` : "HOTEL")}
-              </span>
             </div>
             <p className="font-semibold text-white truncate">
-              {hotelName || "Grand Royale Hotel"}
+              {hotelName || user?.hotelName || "Grand Royale Hotel"}
             </p>
           </div>
         )}

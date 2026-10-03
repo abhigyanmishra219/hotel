@@ -336,11 +336,13 @@ export default function RoomDetailsPage({ params }: PageProps) {
               Property Tenant
             </span>
             <span className="text-xs font-bold text-slate-200 truncate block">
-              {hotelInfo?.name || "Grand Royale"}
+              {hotelInfo?.name || user?.hotelName || "Grand Royale Hotel"}
             </span>
-            <span className="text-[10px] font-mono text-amber-400">
-              {hotelInfo?.hotelCode || (user?.hotelId ? `HOT-${String(user.hotelId).slice(-6).toUpperCase()}` : "HOTEL")}
-            </span>
+            {hotelInfo?.city && (
+              <span className="text-[10px] text-slate-400">
+                {hotelInfo.city}{hotelInfo.state ? `, ${hotelInfo.state}` : ""}
+              </span>
+            )}
           </div>
         </div>
 
