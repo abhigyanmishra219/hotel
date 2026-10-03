@@ -28,9 +28,11 @@ export default function StaffProfilePage() {
 
   // Password change state
   const [formData, setFormData] = useState({
+    currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -51,6 +53,11 @@ export default function StaffProfilePage() {
     setError(null);
     setSuccess(null);
 
+    if (!formData.currentPassword) {
+      setError("Please enter your current password.");
+      return;
+    }
+
     if (!formData.newPassword) {
       setError("Please enter a new password.");
       return;
@@ -62,7 +69,7 @@ export default function StaffProfilePage() {
     }
 
     if (formData.newPassword !== formData.confirmPassword) {
-      setError("Passwords do not match.");
+      setError("New passwords do not match.");
       return;
     }
 
@@ -80,6 +87,7 @@ export default function StaffProfilePage() {
         method: "POST",
         headers,
         body: JSON.stringify({
+          currentPassword: formData.currentPassword,
           newPassword: formData.newPassword,
           confirmPassword: formData.confirmPassword,
         }),
@@ -93,7 +101,7 @@ export default function StaffProfilePage() {
 
       login(data.token, data.user);
       setSuccess("Password updated successfully.");
-      setFormData({ newPassword: "", confirmPassword: "" });
+      setFormData({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (err: any) {
       setError(err.message || "An error occurred while updating your password.");
     } finally {
@@ -238,6 +246,38 @@ export default function StaffProfilePage() {
               )}
 
               <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="currentPassword"
+                    className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1.5"
+                  >
+                    Current Password
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <input
+                      id="currentPassword"
+                      name="currentPassword"
+                      type={showCurrentPassword ? "text" : "password"}
+                      required
+                      placeholder="Enter current password"
+                      value={formData.currentPassword}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-11 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-xs focus:outline-none focus:border-emerald-400 transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-emerald-400 transition"
+                      aria-label={showCurrentPassword ? "Hide password" : "Show password"}
+                    >
+                      {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
                 <div>
                   <label
                     htmlFor="newPassword"

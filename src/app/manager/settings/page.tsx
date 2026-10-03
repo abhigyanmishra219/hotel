@@ -17,6 +17,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
+import ChangePasswordModal from "@/components/manager/ChangePasswordModal";
 
 export default function ManagerSettingsPage() {
   const { user, token, login } = useUser();
@@ -26,6 +27,7 @@ export default function ManagerSettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [name, setName] = useState(user?.name || "");
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   useEffect(() => {
     if (user?.name) {
@@ -248,14 +250,20 @@ export default function ManagerSettingsPage() {
           </div>
         </div>
 
-        <Link
-          href="/change-password"
+        <button
+          type="button"
+          onClick={() => setIsPasswordModalOpen(true)}
           className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition flex items-center gap-2 self-start sm:self-auto"
         >
           <span>Change Password</span>
           <ArrowRight className="w-3.5 h-3.5 text-amber-400" />
-        </Link>
+        </button>
       </div>
+
+      <ChangePasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+      />
     </main>
   );
 }
